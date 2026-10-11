@@ -10,6 +10,9 @@ Language support lets children play in their own language. The whole interface, 
 - `src/composables/useT.ts` - translation function for components
 - `src/components/OptionsDialog.vue` - the language switch
 - `locales/*.json` - the dictionaries, one file per language
+- `tests/logic/i18n.test.ts` - tests of the lookup and the default language
+- `tests/stores/settings.test.ts` - tests of switching and remembering the language
+- `tests/data/locales.test.ts` - tests that both dictionaries hold the same keys and placeholders
 
 ## Requirements
 

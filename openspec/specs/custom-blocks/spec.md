@@ -11,6 +11,9 @@ Custom blocks let the player give a name to a sequence of blocks and reuse it as
 - `src/components/CustomBlockLibrary.vue` - library rows with edit and delete
 - `src/components/CustomBlockEditor.vue` - the editor view
 - `src/components/ProgramPanel.vue` - the Make block button
+- `tests/logic/custom-blocks.test.ts` - tests of cycle prevention
+- `tests/blocks/custom-call.test.ts` - tests of executing a custom block and the depth limit
+- `tests/stores/customBlocks.test.ts` - tests of the editor, saving, naming, deleting and making a block from a selection
 
 ## Requirements
 

@@ -6,6 +6,7 @@ If is the container block that runs the blocks inside it only when a condition a
 ## Code
 
 - `src/blocks/if.ts` - the block definition and its conditional execution
+- `tests/blocks/if.test.ts` - tests
 
 ## Requirements
 

@@ -7,6 +7,7 @@ Move forward is the action block that walks the robot one cell in the direction 
 
 - `src/blocks/move-forward.ts` - the block definition, its action and failure messages
 - `src/logic/world.ts` - the movement rules it applies
+- `tests/blocks/move-forward.test.ts` - tests
 
 ## Requirements
 

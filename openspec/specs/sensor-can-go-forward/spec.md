@@ -8,6 +8,8 @@ Can go forward is the sensor that tells a program whether the robot could take a
 - `src/sensors/can-go-forward.ts` - the sensor definition
 - `src/logic/world.ts` - the shared "can move forward" rule
 - `src/sensors/index.ts` - the Sensors section of the library
+- `tests/sensors/can-go-forward.test.ts` - tests
+- `tests/composables/useDragDrop.test.ts` - tests of dragging the sensor from the library into a condition slot
 
 ## Requirements
 

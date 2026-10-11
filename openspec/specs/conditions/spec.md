@@ -10,6 +10,8 @@ Conditions are the yes/no questions that If, Repeat while and Not ask about the 
 - `src/composables/useDragDrop.ts` - dropping, replacing and removing condition blocks
 - `src/stores/execution.ts` - the condition-check step and the sonar state
 - `src/components/MapCanvas.vue` - draws the sonar animation
+- `tests/logic/conditions.test.ts` - tests of evaluating and naming a condition
+- `tests/stores/execution.test.ts` - tests of checks as steps, the status text and the sonar state
 
 ## Requirements
 

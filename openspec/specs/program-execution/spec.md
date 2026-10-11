@@ -11,6 +11,9 @@ Program execution is how the player's blocks become robot behaviour: running the
 - `src/components/SpeedButtons.vue` - the speed buttons
 - `src/composables/useShortcuts.ts` - F5, F6 and Esc
 - `src/components/BlockItem.vue` - shows the pointer and the status dots
+- `tests/logic/interpreter.test.ts` - tests of the step generator and its limits
+- `tests/stores/execution.test.ts` - tests of run, pause, step, stop, reset, speed, pointer and status dots
+- `tests/composables/useShortcuts.test.ts` - tests of F5, F6 and Esc
 
 ## Requirements
 

@@ -6,6 +6,7 @@ Repeat while is the container block that keeps running the blocks inside it for 
 ## Code
 
 - `src/blocks/repeat-while.ts` - the block definition, its loop and the does-nothing guard
+- `tests/blocks/repeat-while.test.ts` - tests
 
 ## Requirements
 

@@ -16,6 +16,10 @@ The program editor is where the player builds a program without typing: blocks a
 - `src/components/BlockList.vue` - a list of blocks with the drop placeholder
 - `src/components/BlockItem.vue` - one block, rendered from its definition
 - `src/components/RunControls.vue` - the Clear button
+- `tests/logic/program.test.ts` - tests of the program tree
+- `tests/stores/program.test.ts` - tests of the program store
+- `tests/stores/ui.test.ts` - tests of select mode, selection and collapsing sections
+- `tests/blocks/index.test.ts` - tests of the block registry
 
 ## Requirements
 

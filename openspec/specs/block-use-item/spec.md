@@ -7,6 +7,7 @@ Use item is the action block that applies something from the robot's inventory t
 
 - `src/blocks/use-item.ts` - the block definition, its action and messages
 - `src/logic/world.ts` - using an item on the cell ahead
+- `tests/blocks/use-item.test.ts` - tests
 
 ## Requirements
 
@@ -33,7 +34,7 @@ When the chosen slot holds a key and a locked door is in the cell ahead, the blo
 - **AND** the robot is still on the same cell
 
 ### Requirement: Empty slot
-When the chosen slot is empty or the number is outside 1 to 8, the block SHALL show "Slot N is empty." in the status line and get a red dot. The program SHALL continue with the next block.
+A slot SHALL be named only by a whole number from 1 to 8. When the chosen slot is empty, or the number is outside 1 to 8, has a fraction or is missing, the block SHALL show "Slot N is empty." in the status line and get a red dot, and SHALL NOT use any item. The program SHALL continue with the next block.
 
 #### Scenario: Empty slot
 - **GIVEN** slot 3 is empty
@@ -45,6 +46,13 @@ When the chosen slot is empty or the number is outside 1 to 8, the block SHALL s
 - **GIVEN** a Use item block set to 12
 - **WHEN** it executes
 - **THEN** the status line shows "Slot 12 is empty."
+- **AND** the block gets a red dot and the next block executes
+
+#### Scenario: Slot number with a fraction
+- **GIVEN** a key in slot 1, a locked door ahead and a Use item block set to 1.5
+- **WHEN** it executes
+- **THEN** the status line shows "Slot 1.5 is empty."
+- **AND** the door stays locked and slot 1 still holds the key
 - **AND** the block gets a red dot and the next block executes
 
 ### Requirement: Nothing to use the item on

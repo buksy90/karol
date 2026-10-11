@@ -79,9 +79,9 @@ export function moveForward(w: World, slots: Slots): MoveResult {
   return { moved: true, blocked: null, key, won: p.cell === 'e' };
 }
 
-/** Use the item in slot `n` (1-based) on the cell ahead. */
+/** Use the item in slot `n` (1-based) on the cell ahead. Only a whole number names a slot. */
 export function useItem(w: World, slots: Slots, n: number): UseResult {
-  const item = slots[(n | 0) - 1];
+  const item = Number.isInteger(n) ? slots[n - 1] : null;
   if (!item) return 'empty';
   const p = probeForward(w);
   if (item === KEY && p.cell === 'L') {

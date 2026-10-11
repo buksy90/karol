@@ -19,6 +19,10 @@ The app shell is the frame around the game: how the screen is divided between pr
 - `src/components/SpecsDialog.vue` - the in-app specs view
 - `src/components/specs-en.html` - the in-app specs text
 - `vite.config.ts` - the build that produces the single HTML file
+- `tests/stores/settings.test.ts` - tests of the sound setting
+- `tests/stores/ui.test.ts` - tests of the status line and dialogs
+- `tests/logic/storage.test.ts` - tests of the guarded local storage
+- `tests/composables/useShortcuts.test.ts` - test of Esc closing a dialog without stopping the run
 
 ## Requirements
 

@@ -7,6 +7,7 @@ Not is the operator block that turns a condition into its opposite. It lets the 
 
 - `src/blocks/not.ts` - the operator definition
 - `src/logic/conditions.ts` - how operators are evaluated
+- `tests/blocks/not.test.ts` - tests
 
 ## Requirements
 

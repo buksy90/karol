@@ -11,6 +11,10 @@ Levels are the puzzles the player solves: each one is a named map with a start a
 - `src/components/WinDialog.vue` - the win dialog
 - `src/main.ts` - loads the built-in level files and exposes the console functions
 - `levels/*.json` - the built-in levels, one file each
+- `tests/logic/levels.test.ts` - tests of validation, versioning and import
+- `tests/stores/levels.test.ts` - tests of start-up, loading, remembering, export and import
+- `tests/data/levels.test.ts` - tests of the built-in level files
+- `tests/components/WinDialog.test.ts` - tests of Next level, Stay, Restart and closing the win dialog
 
 ## Requirements
 

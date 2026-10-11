@@ -9,8 +9,10 @@ What the game does is described in `openspec/specs/`, one specification per capa
 ```
 npm install          # once
 npm run dev          # development server with live reload
-npm run typecheck    # strict TypeScript check of the application, the Vite config and the scripts
+npm run typecheck    # strict TypeScript check of the application, the tests, the Vite config and the scripts
 npm run build        # type-checks, then writes dist/index.html
+npm test             # runs the unit tests once
+npm run test:watch   # runs them again on every change
 npm run preview      # serves the built file
 npm run check:specs  # checks that every file listed in a spec's Code section exists
 ```
@@ -44,8 +46,9 @@ src/
   stores/             world, inventory, program, customBlocks, execution, levels, settings, ui
   composables/        drag and drop, sounds, keyboard shortcuts, translation
   components/         the interface
+tests/                unit tests for the logic and the stores, laid out like src/
 scripts/              check-spec-refs.mjs
-legacy/               the original single-file game, kept for comparison until unit tests exist
+legacy/               the original single-file game, kept for comparison; to be deleted now that unit tests exist
 openspec/             specifications and changes
 ```
 
@@ -55,6 +58,30 @@ Adding things:
 - **A level**: add `levels/<id>.json` with `id`, `name` and `map`. Files are ordered by name, numbers compared as numbers.
 - **A text**: add the key to `locales/en.json` first; that is what makes it usable in code.
 - **A language**: add `locales/<code>.json` and an entry in `LANGUAGES` in `src/stores/settings.ts`.
+
+## Tests
+
+The unit tests cover the logic layer and the stores. They run in Node with [Vitest](https://vitest.dev), with no browser. Three files go further and mount real components in [happy-dom](https://github.com/capricorn86/happy-dom): the keyboard shortcuts, the win dialog, and dragging the sensor into a slot. Rendering, sounds and the rest of drag and drop are not covered; check those by hand.
+
+```
+tests/
+  helpers/            worlds from map rows, short builders for program blocks, store setup and "play a program", mounting a component
+  logic/              one file per module in src/logic
+  blocks/, sensors/   one file per block and sensor, and the registry
+  stores/             one file per store (the inventory is covered with the world)
+  data/               the level files and the translations
+  components/         components mounted on a page
+  composables/        composables used by a component mounted on a page
+```
+
+- **Names come from the specs.** A `describe` is `<capability>: <Requirement name>` and an `it` is the scenario name, word for word, so a failing test names the scenario it breaks. Tests of something no scenario states sit in a `describe` named after the function.
+- **Tests pin what the game does.** A change that alters behaviour changes the spec and the test together.
+- **Store tests** call `setupStores()` in `beforeEach` and `teardownStores()` in `afterEach` (`tests/helpers/stores.ts`). That gives fresh stores, local storage in memory and fake timers, and drops the run in progress, which lives outside the store. `play(...)` steps a program to its end; `run(...)` lets the timer run it, which keeps each block's own message in the status line.
+- **Page-level tests** start with the line `// @vitest-environment happy-dom` and use `mount`, `unmount`, `rendered` and `click` from `tests/helpers/dom.ts`. happy-dom lays nothing out, so a drag test sets what `document.elementFromPoint` returns to say what is under the pointer; see `tests/composables/useDragDrop.test.ts`. Each such file costs about two seconds to start, so use one only for what lives in a component.
+- **A new block or sensor** gets its test file next to the others, and its spec lists it in the `## Code` section. A new level file or text is checked by `tests/data` without any change.
+- **CI** (`.github/workflows/ci.yml`) runs the tests, the spec reference check and the build on every push to `main` and every pull request.
+
+Vitest 5 needs Node 22.12+, 24 or 26+. Use Node 24, as CI does.
 
 ## Debugging
 

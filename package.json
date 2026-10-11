@@ -7,6 +7,8 @@
     "dev": "vite",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "build": "npm run typecheck && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "check:specs": "node scripts/check-spec-refs.mjs"
   },
@@ -22,9 +24,11 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "@vitejs/plugin-vue": "^6.0.10",
+    "happy-dom": "^20.14.6",
     "typescript": "^6.0.3",
     "vite": "^8.3.4",
     "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^5.0.3",
     "vue-tsc": "^3.3.13"
   }
 }
