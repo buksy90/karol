@@ -5,8 +5,8 @@ Not is the operator block that turns a condition into its opposite. It lets the 
 
 ## Code
 
-- `src/blocks/not.js` - the operator definition
-- `src/logic/conditions.js` - how operators are evaluated
+- `src/blocks/not.ts` - the operator definition
+- `src/logic/conditions.ts` - how operators are evaluated
 
 ## Requirements
 

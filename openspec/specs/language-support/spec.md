@@ -5,9 +5,9 @@ Language support lets children play in their own language. The whole interface, 
 
 ## Code
 
-- `src/logic/i18n.js` - key lookup with English fallback; default language
-- `src/stores/settings.js` - the current language and the list of languages
-- `src/composables/useT.js` - translation function for components
+- `src/logic/i18n.ts` - key lookup with English fallback; default language
+- `src/stores/settings.ts` - the current language and the list of languages
+- `src/composables/useT.ts` - translation function for components
 - `src/components/OptionsDialog.vue` - the language switch
 - `locales/*.json` - the dictionaries, one file per language
 

@@ -5,8 +5,8 @@ Use item is the action block that applies something from the robot's inventory t
 
 ## Code
 
-- `src/blocks/use-item.js` - the block definition, its action and messages
-- `src/logic/world.js` - using an item on the cell ahead
+- `src/blocks/use-item.ts` - the block definition, its action and messages
+- `src/logic/world.ts` - using an item on the cell ahead
 
 ## Requirements
 

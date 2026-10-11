@@ -5,9 +5,9 @@ Can go forward is the sensor that tells a program whether the robot could take a
 
 ## Code
 
-- `src/sensors/can-go-forward.js` - the sensor definition
-- `src/logic/world.js` - the shared "can move forward" rule
-- `src/sensors/index.js` - the Sensors section of the library
+- `src/sensors/can-go-forward.ts` - the sensor definition
+- `src/logic/world.ts` - the shared "can move forward" rule
+- `src/sensors/index.ts` - the Sensors section of the library
 
 ## Requirements
 

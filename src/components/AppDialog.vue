@@ -1,14 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import type { DialogKind } from '../stores/ui.ts';
+import type { MessageKey } from '../logic/types.ts';
 import LevelsDialog from './LevelsDialog.vue';
 import OptionsDialog from './OptionsDialog.vue';
 import SpecsDialog from './SpecsDialog.vue';
 import WinDialog from './WinDialog.vue';
 
 // The one dialog frame; its content depends on which dialog is open.
-const TITLES = { lv: 'ui.levels', sp: 'ui.specs', op: 'ui.options', win: 'ui.good' };
+const TITLES: Record<DialogKind, MessageKey> = { lv: 'ui.levels', sp: 'ui.specs', op: 'ui.options', win: 'ui.good' };
 
 const t = useT();
 const ui = useUiStore();

@@ -5,11 +5,11 @@ Levels are the puzzles the player solves: each one is a named map with a start a
 
 ## Code
 
-- `src/logic/levels.js` - validation, versioned start-up list, import merge
-- `src/stores/levels.js` - the level list and current level; load, save, export, import
+- `src/logic/levels.ts` - validation, versioned start-up list, import merge
+- `src/stores/levels.ts` - the level list and current level; load, save, export, import
 - `src/components/LevelsDialog.vue` - the level picker
 - `src/components/WinDialog.vue` - the win dialog
-- `src/main.js` - loads the built-in level files and exposes the console functions
+- `src/main.ts` - loads the built-in level files and exposes the console functions
 - `levels/*.json` - the built-in levels, one file each
 
 ## Requirements

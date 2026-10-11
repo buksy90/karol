@@ -5,8 +5,8 @@ Move forward is the action block that walks the robot one cell in the direction 
 
 ## Code
 
-- `src/blocks/move-forward.js` - the block definition, its action and failure messages
-- `src/logic/world.js` - the movement rules it applies
+- `src/blocks/move-forward.ts` - the block definition, its action and failure messages
+- `src/logic/world.ts` - the movement rules it applies
 
 ## Requirements
 

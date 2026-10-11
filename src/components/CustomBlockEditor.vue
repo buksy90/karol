@@ -1,6 +1,6 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useCustomBlocksStore } from '../stores/customBlocks.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useCustomBlocksStore } from '../stores/customBlocks.ts';
 import BlockList from './BlockList.vue';
 
 // Shown in place of the program panel while a custom block is created or edited.

@@ -5,12 +5,12 @@ The program editor is where the player builds a program without typing: blocks a
 
 ## Code
 
-- `src/logic/program.js` - the program tree: create, copy, locate, selection rules
-- `src/stores/program.js` - the program
-- `src/stores/ui.js` - drag state, select mode and selection, collapsed sections
-- `src/blocks/index.js` - the Blocks section of the library and all block definitions
-- `src/composables/useDragDrop.js` - dragging, the drop preview, the remove area
-- `src/composables/useSounds.js` - add, move and delete sounds
+- `src/logic/program.ts` - the program tree: create, copy, locate, selection rules
+- `src/stores/program.ts` - the program
+- `src/stores/ui.ts` - drag state, select mode and selection, collapsed sections
+- `src/blocks/index.ts` - the Blocks section of the library and all block definitions
+- `src/composables/useDragDrop.ts` - dragging, the drop preview, the remove area
+- `src/composables/useSounds.ts` - add, move and delete sounds
 - `src/components/BlockLibrary.vue` - the library with its collapsible sections
 - `src/components/ProgramPanel.vue` - the program panel and select mode
 - `src/components/BlockList.vue` - a list of blocks with the drop placeholder

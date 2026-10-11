@@ -1,10 +1,12 @@
-<script setup>
+<script setup lang="ts">
 import { reactive } from 'vue';
-import { libraryBlocks } from '../blocks/index.js';
-import { librarySensors } from '../sensors/index.js';
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
-import { useCustomBlocksStore } from '../stores/customBlocks.js';
+import type { BlockDef, MessageKey, ProgramNode } from '../logic/types.ts';
+import { libraryBlocks } from '../blocks/index.ts';
+import { librarySensors } from '../sensors/index.ts';
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import type { LibrarySection } from '../stores/ui.ts';
+import { useCustomBlocksStore } from '../stores/customBlocks.ts';
 import BlockItem from './BlockItem.vue';
 import CustomBlockLibrary from './CustomBlockLibrary.vue';
 
@@ -12,11 +14,11 @@ const t = useT();
 const ui = useUiStore(), custom = useCustomBlocksStore();
 
 // Template blocks shown in the library. Dragging one creates a fresh block of that type.
-const template = def => ({ id: 'lib-' + def.type, type: def.type, n: def.number && def.number.default, cond: null, children: [] });
+const template = (def: BlockDef): ProgramNode => ({ id: 'lib-' + def.type, type: def.type, n: def.number && def.number.default, cond: null, children: [] });
 const sensors = reactive(librarySensors.map(template));
 const blocks = reactive(libraryBlocks.map(template));
 
-const heading = (section, key) => (ui.collapsed[section] ? '▶ ' : '▼ ') + t(key);
+const heading = (section: LibrarySection, key: MessageKey) => (ui.collapsed[section] ? '▶ ' : '▼ ') + t(key);
 </script>
 
 <template>

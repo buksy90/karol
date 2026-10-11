@@ -1,16 +1,16 @@
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
-import { useWorldStore } from '../stores/world.js';
-import { useExecutionStore } from '../stores/execution.js';
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import { useWorldStore } from '../stores/world.ts';
+import { useExecutionStore } from '../stores/execution.ts';
 
 // The live map: tiles, crates, the robot and the sonar, redrawn every frame.
 // While a block is dragged, the remove area covers it.
 const t = useT();
 const ui = useUiStore(), world = useWorldStore(), exec = useExecutionStore();
 
-const canvas = ref(null);
+const canvas = ref<HTMLCanvasElement | null>(null);
 
 // Two floor shades per room, cycled over the rooms.
 const PALETTE = [['#d6ecff', '#c4e2ff'], ['#fff1c9', '#ffe8a8'], ['#d9f7e2', '#c6f0d3'], ['#ffe3f0', '#ffd0e6'], ['#eadfff', '#dccbff']];
@@ -22,7 +22,7 @@ let frameId = 0;
 // A reset puts the robot at its start at once, without gliding there.
 watch(() => world.resets, () => { rx = world.robot.x; ry = world.robot.y; ra = world.angle; }, { immediate: true });
 
-function floorColor(x, y) {
+function floorColor(x: number, y: number) {
   const id = world.roomMap[y][x];
   return id < 0 ? '#e9e4d6' : PALETTE[id % 5][(x + y) % 2];
 }
@@ -31,7 +31,7 @@ function frame() {
   frameId = requestAnimationFrame(frame);
   const cv = canvas.value;
   if (!cv || !world.rows) return;
-  const ctx = cv.getContext('2d');
+  const ctx = cv.getContext('2d')!;
   const COLS = world.cols, ROWS = world.rows, grid = world.grid, R = world.robot;
   const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }

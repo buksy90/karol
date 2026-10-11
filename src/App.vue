@@ -1,11 +1,11 @@
-<script setup>
+<script setup lang="ts">
 import { watch, onMounted, onUnmounted } from 'vue';
-import { isCondition } from './blocks/index.js';
-import { useDragDrop } from './composables/useDragDrop.js';
-import { useShortcuts } from './composables/useShortcuts.js';
-import { useUiStore } from './stores/ui.js';
-import { useExecutionStore } from './stores/execution.js';
-import { useCustomBlocksStore } from './stores/customBlocks.js';
+import { isCondition } from './blocks/index.ts';
+import { useDragDrop } from './composables/useDragDrop.ts';
+import { useShortcuts } from './composables/useShortcuts.ts';
+import { useUiStore } from './stores/ui.ts';
+import { useExecutionStore } from './stores/execution.ts';
+import { useCustomBlocksStore } from './stores/customBlocks.ts';
 import BlockLibrary from './components/BlockLibrary.vue';
 import ProgramPanel from './components/ProgramPanel.vue';
 import SpeedButtons from './components/SpeedButtons.vue';

@@ -1,6 +1,6 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
 import InventoryBar from './InventoryBar.vue';
 
 const t = useT();

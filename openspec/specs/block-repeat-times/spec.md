@@ -5,8 +5,8 @@ Repeat N times is the container block that runs the blocks inside it a fixed num
 
 ## Code
 
-- `src/blocks/repeat-times.js` - the block definition and its loop, including round-start steps
-- `src/stores/execution.js` - the rounds-left badge state
+- `src/blocks/repeat-times.ts` - the block definition and its loop, including round-start steps
+- `src/stores/execution.ts` - the rounds-left badge state
 - `src/components/BlockItem.vue` - shows the badge
 
 ## Requirements

@@ -1,7 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { reactive } from 'vue';
-import { useT } from '../composables/useT.js';
-import { useCustomBlocksStore } from '../stores/customBlocks.js';
+import { useT } from '../composables/useT.ts';
+import { useCustomBlocksStore } from '../stores/customBlocks.ts';
 import BlockItem from './BlockItem.vue';
 
 const CONFIRM_MS = 2500;
@@ -10,9 +10,9 @@ const t = useT();
 const custom = useCustomBlocksStore();
 
 // Delete buttons waiting for their second, confirming press.
-const sure = reactive({});
+const sure = reactive<Record<string, boolean>>({});
 
-function remove(id) {
+function remove(id: string) {
   if (!sure[id]) {
     sure[id] = true;
     setTimeout(() => { delete sure[id]; }, CONFIRM_MS);

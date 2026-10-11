@@ -1,6 +1,6 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useInventoryStore } from '../stores/inventory.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useInventoryStore } from '../stores/inventory.ts';
 
 const t = useT();
 const inventory = useInventoryStore();

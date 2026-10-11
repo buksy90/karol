@@ -1,11 +1,12 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
-import { locate } from '../logic/program.js';
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
-import { useProgramStore } from '../stores/program.js';
-import { useExecutionStore } from '../stores/execution.js';
-import { useCustomBlocksStore } from '../stores/customBlocks.js';
+import { locate } from '../logic/program.ts';
+import type { ListLocation } from '../logic/types.ts';
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import { useProgramStore } from '../stores/program.ts';
+import { useExecutionStore } from '../stores/execution.ts';
+import { useCustomBlocksStore } from '../stores/customBlocks.ts';
 import BlockList from './BlockList.vue';
 
 const t = useT();
@@ -19,7 +20,7 @@ function toggleSelectMode() {
 
 // Open the editor prefilled with the selected blocks; Save replaces them with the new block.
 function makeBlock() {
-  const hits = ui.selected.map(id => locate(program.blocks, id, 'main')).filter(Boolean).sort((a, b) => a.index - b.index);
+  const hits = (ui.selected.map(id => locate(program.blocks, id, 'main')).filter(Boolean) as ListLocation[]).sort((a, b) => a.index - b.index);
   if (hits.length) custom.openEditor(null, hits.map(h => h.node), hits.map(h => h.node.id));
 }
 </script>

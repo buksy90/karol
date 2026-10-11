@@ -9,7 +9,8 @@ What the game does is described in `openspec/specs/`, one specification per capa
 ```
 npm install          # once
 npm run dev          # development server with live reload
-npm run build        # writes dist/index.html
+npm run typecheck    # strict TypeScript check of the application, the Vite config and the scripts
+npm run build        # type-checks, then writes dist/index.html
 npm run preview      # serves the built file
 npm run check:specs  # checks that every file listed in a spec's Code section exists
 ```
@@ -26,17 +27,20 @@ Three layers. Imports only point downward.
 | Stores | `src/stores/` | Pinia. Hold the runtime state and call the logic. |
 | Logic | `src/logic/`, `src/blocks/`, `src/sensors/` | Plain functions and data. No Vue, no Pinia, no DOM. |
 
+The code is TypeScript, checked in strict mode. The shapes shared by all layers (program block, block and sensor definitions, interpreter steps, world, level) are in `src/logic/types.ts`. Imports name the file with its `.ts` extension. Translation keys are typed from `locales/en.json`, so a misspelled key fails the type check.
+
 ```
 index.html            mount point
 levels/               built-in levels, one .json file each
 locales/              translations, one .json file per language
 src/
-  main.js             start-up order; debug access to the stores
+  main.ts             start-up order; debug access to the stores
+  env.d.ts            globals: the debug stores, the console functions
   App.vue             the two-column layout
   styles.css
-  logic/              world rules, interpreter, conditions, program tree, levels, i18n, storage
-  blocks/             one module per block, and the registry (index.js)
-  sensors/            one module per sensor, and the registry (index.js)
+  logic/              shared types (types.ts), world rules, interpreter, conditions, program tree, levels, i18n, storage
+  blocks/             one module per block, and the registry (index.ts)
+  sensors/            one module per sensor, and the registry (index.ts)
   stores/             world, inventory, program, customBlocks, execution, levels, settings, ui
   composables/        drag and drop, sounds, keyboard shortcuts, translation
   components/         the interface
@@ -47,9 +51,10 @@ openspec/             specifications and changes
 
 Adding things:
 
-- **A block or sensor**: add a module in `src/blocks/` or `src/sensors/` and list it in that folder's `index.js`.
+- **A block or sensor**: add a module in `src/blocks/` or `src/sensors/` and list it in that folder's `index.ts`. Type the definition with `satisfies` and the matching type from `src/logic/types.ts` (`ActionDef`, `ContainerDef`, `SensorDef`, `OperatorDef`).
 - **A level**: add `levels/<id>.json` with `id`, `name` and `map`. Files are ordered by name, numbers compared as numbers.
-- **A language**: add `locales/<code>.json` and an entry in `LANGUAGES` in `src/stores/settings.js`.
+- **A text**: add the key to `locales/en.json` first; that is what makes it usable in code.
+- **A language**: add `locales/<code>.json` and an entry in `LANGUAGES` in `src/stores/settings.ts`.
 
 ## Debugging
 

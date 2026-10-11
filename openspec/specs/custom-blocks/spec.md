@@ -5,9 +5,9 @@ Custom blocks let the player give a name to a sequence of blocks and reuse it as
 
 ## Code
 
-- `src/logic/custom-blocks.js` - cycle detection and which blocks may be offered
-- `src/stores/customBlocks.js` - the custom blocks and the editor draft; create, save, delete
-- `src/blocks/custom-call.js` - executing a use of a custom block, with the depth limit
+- `src/logic/custom-blocks.ts` - cycle detection and which blocks may be offered
+- `src/stores/customBlocks.ts` - the custom blocks and the editor draft; create, save, delete
+- `src/blocks/custom-call.ts` - executing a use of a custom block, with the depth limit
 - `src/components/CustomBlockLibrary.vue` - library rows with edit and delete
 - `src/components/CustomBlockEditor.vue` - the editor view
 - `src/components/ProgramPanel.vue` - the Make block button

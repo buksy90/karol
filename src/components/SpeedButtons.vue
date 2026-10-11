@@ -1,6 +1,6 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useExecutionStore, SPEEDS } from '../stores/execution.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useExecutionStore, SPEEDS } from '../stores/execution.ts';
 
 const t = useT();
 const exec = useExecutionStore();

@@ -1,7 +1,7 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { ensureAudio, playSound } from '../composables/useSounds.js';
-import { useSettingsStore, LANGUAGES } from '../stores/settings.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { ensureAudio, playSound } from '../composables/useSounds.ts';
+import { useSettingsStore, LANGUAGES } from '../stores/settings.ts';
 
 const t = useT();
 const settings = useSettingsStore();

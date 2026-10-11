@@ -1,10 +1,10 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
-import { useWorldStore } from '../stores/world.js';
-import { useProgramStore } from '../stores/program.js';
-import { useExecutionStore } from '../stores/execution.js';
-import { useLevelsStore } from '../stores/levels.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import { useWorldStore } from '../stores/world.ts';
+import { useProgramStore } from '../stores/program.ts';
+import { useExecutionStore } from '../stores/execution.ts';
+import { useLevelsStore } from '../stores/levels.ts';
 
 const t = useT();
 const ui = useUiStore(), world = useWorldStore(), program = useProgramStore(), exec = useExecutionStore(), levels = useLevelsStore();
@@ -18,7 +18,7 @@ function clearProgram() {
 function nextLevel() {
   const next = levels.next;
   ui.closeDialog();
-  levels.load(next.id);
+  levels.load(next!.id);
   clearProgram();
 }
 function stay() {

@@ -1,12 +1,14 @@
-<script setup>
-import { useUiStore } from '../stores/ui.js';
+<script setup lang="ts">
+import type { ProgramNode } from '../logic/types.ts';
+import { useUiStore } from '../stores/ui.ts';
 import BlockItem from './BlockItem.vue';
 
 // The "?" slot of If, Repeat while and Not. Holds one condition block or nothing.
-defineProps({
-  owner: { type: Object, required: true },   // the block this slot belongs to
-  library: Boolean,
-});
+defineProps<{
+  /** the block this slot belongs to */
+  owner: ProgramNode;
+  library?: boolean;
+}>();
 
 const ui = useUiStore();
 </script>

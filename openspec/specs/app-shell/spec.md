@@ -6,19 +6,19 @@ The app shell is the frame around the game: how the screen is divided between pr
 ## Code
 
 - `index.html` - the page the application mounts into
-- `src/main.js` - start-up order; debug access to the stores
+- `src/main.ts` - start-up order; debug access to the stores
 - `src/App.vue` - the two-column layout
 - `src/styles.css` - all styles, including the narrow-screen layout
-- `src/stores/ui.js` - status message and open dialog
-- `src/stores/settings.js` - the sound setting
-- `src/logic/storage.js` - guarded local storage
+- `src/stores/ui.ts` - status message and open dialog
+- `src/stores/settings.ts` - the sound setting
+- `src/logic/storage.ts` - guarded local storage
 - `src/components/TopBar.vue` - inventory and the Levels, Specs and Options buttons
 - `src/components/StatusLine.vue` - the status line
 - `src/components/AppDialog.vue` - the dialog frame
 - `src/components/OptionsDialog.vue` - the Options menu
 - `src/components/SpecsDialog.vue` - the in-app specs view
 - `src/components/specs-en.html` - the in-app specs text
-- `vite.config.js` - the build that produces the single HTML file
+- `vite.config.ts` - the build that produces the single HTML file
 
 ## Requirements
 

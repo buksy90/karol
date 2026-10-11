@@ -1,14 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue';
-import { useUiStore } from '../stores/ui.js';
+import type { ProgramNode } from '../logic/types.ts';
+import { useUiStore } from '../stores/ui.ts';
 import BlockItem from './BlockItem.vue';
 
 // A list of blocks: the program, a custom block body, or the body of a container.
 // `owner` is the key drag and drop uses to address it: 'main', 'draft' or a block id.
-const props = defineProps({
-  list: { type: Array, required: true },
-  owner: { type: String, required: true },
-});
+const props = defineProps<{
+  list: ProgramNode[];
+  owner: string;
+}>();
 
 const ui = useUiStore();
 

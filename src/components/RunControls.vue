@@ -1,8 +1,8 @@
-<script setup>
-import { useT } from '../composables/useT.js';
-import { useUiStore } from '../stores/ui.js';
-import { useProgramStore } from '../stores/program.js';
-import { useExecutionStore } from '../stores/execution.js';
+<script setup lang="ts">
+import { useT } from '../composables/useT.ts';
+import { useUiStore } from '../stores/ui.ts';
+import { useProgramStore } from '../stores/program.ts';
+import { useExecutionStore } from '../stores/execution.ts';
 
 const t = useT();
 const ui = useUiStore(), program = useProgramStore(), exec = useExecutionStore();

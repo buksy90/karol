@@ -5,11 +5,11 @@ Program execution is how the player's blocks become robot behaviour: running the
 
 ## Code
 
-- `src/logic/interpreter.js` - the step generator and the safety limits
-- `src/stores/execution.js` - the run session: run, pause, step, stop, reset, speed, pointer, status dots
+- `src/logic/interpreter.ts` - the step generator and the safety limits
+- `src/stores/execution.ts` - the run session: run, pause, step, stop, reset, speed, pointer, status dots
 - `src/components/RunControls.vue` - Run/Pause, Step, Stop, Reset
 - `src/components/SpeedButtons.vue` - the speed buttons
-- `src/composables/useShortcuts.js` - F5, F6 and Esc
+- `src/composables/useShortcuts.ts` - F5, F6 and Esc
 - `src/components/BlockItem.vue` - shows the pointer and the status dots
 
 ## Requirements

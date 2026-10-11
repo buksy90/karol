@@ -5,9 +5,9 @@ The world is the tile map the robot Karol lives on. It defines what each cell is
 
 ## Code
 
-- `src/logic/world.js` - map parsing, room detection, and the rules for moving, crates, keys, doors and the exit
-- `src/stores/world.js` - state of the loaded level; load and reset
-- `src/stores/inventory.js` - the 8 inventory slots
+- `src/logic/world.ts` - map parsing, room detection, and the rules for moving, crates, keys, doors and the exit
+- `src/stores/world.ts` - state of the loaded level; load and reset
+- `src/stores/inventory.ts` - the 8 inventory slots
 - `src/components/MapCanvas.vue` - draws the map and the robot
 - `src/components/InventoryBar.vue` - shows the inventory slots
 

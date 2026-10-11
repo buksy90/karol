@@ -1,11 +1,11 @@
-<script setup>
-import { levelSize } from '../logic/levels.js';
-import { useUiStore } from '../stores/ui.js';
-import { useLevelsStore } from '../stores/levels.js';
+<script setup lang="ts">
+import { levelSize } from '../logic/levels.ts';
+import { useUiStore } from '../stores/ui.ts';
+import { useLevelsStore } from '../stores/levels.ts';
 
 const ui = useUiStore(), levels = useLevelsStore();
 
-function choose(id) {
+function choose(id: string) {
   levels.load(id);
   ui.closeDialog();
 }

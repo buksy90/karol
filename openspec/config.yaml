@@ -1,5 +1,21 @@
 schema: spec-driven
 
+context: |
+  Robot Karol: a browser game where children program a robot with visual blocks.
+  Tech stack: Vue 3 single-file components (script setup), Pinia options stores for
+  runtime state, strict TypeScript, Vite. The build must stay one self-contained
+  dist/index.html that works opened from disk with no network.
+  Layers: logic (src/logic, src/blocks, src/sensors) has no Vue, Pinia or DOM;
+  stores (src/stores) use logic; components and composables use stores. Nothing
+  imports upwards. Shared types live in src/logic/types.ts.
+  Conventions: imports carry explicit .ts extensions; a block or sensor is one module
+  plus an entry in its folder's index.ts; a level is one levels/<id>.json object; a
+  language is one locales/<code>.json, and translation keys are typed from en.json.
+  Specs describe what the player sees, in Gherkin-like scenarios. Each capability spec
+  has a "## Code" section listing the files that implement it; a change that renames or
+  adds files updates those sections, and npm run check:specs must pass.
+  npm run typecheck must pass; npm run build runs it first.
+
 # Project context (optional)
 # Add only constraints that should guide OpenSpec artifacts and workflows.
 # Include constraints an agent cannot infer by reading the code.

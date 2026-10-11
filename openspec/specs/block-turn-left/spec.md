@@ -5,7 +5,7 @@ Turn left is the action block that lets the player change the direction the robo
 
 ## Code
 
-- `src/blocks/turn-left.js` - the block definition and its action
+- `src/blocks/turn-left.ts` - the block definition and its action
 
 ## Requirements
 

@@ -1,3 +1,4 @@
+// @ts-check
 // Checks that every path listed in a "## Code" section of a capability spec exists.
 // A spec without a Code section, or an entry pointing at nothing, fails the check.
 // Paths may end in a wildcard file name such as levels/*.json.
@@ -8,6 +9,10 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const specsDir = path.join(root, 'openspec', 'specs');
 
+/**
+ * @param {string} ref a path from a Code section, relative to the repository root
+ * @returns {boolean}
+ */
 function exists(ref) {
   if (!ref.includes('*')) return fs.existsSync(path.join(root, ref));
   const dir = path.join(root, path.dirname(ref));

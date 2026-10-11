@@ -5,10 +5,10 @@ Conditions are the yes/no questions that If, Repeat while and Not ask about the 
 
 ## Code
 
-- `src/logic/conditions.js` - evaluation, status text, innermost sensor
+- `src/logic/conditions.ts` - evaluation, status text, innermost sensor
 - `src/components/ConditionSlot.vue` - the condition slot
-- `src/composables/useDragDrop.js` - dropping, replacing and removing condition blocks
-- `src/stores/execution.js` - the condition-check step and the sonar state
+- `src/composables/useDragDrop.ts` - dropping, replacing and removing condition blocks
+- `src/stores/execution.ts` - the condition-check step and the sonar state
 - `src/components/MapCanvas.vue` - draws the sonar animation
 
 ## Requirements
