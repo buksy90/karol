@@ -1,0 +1,35 @@
+<script setup>
+import { reactive } from 'vue';
+import { useT } from '../composables/useT.js';
+import { useCustomBlocksStore } from '../stores/customBlocks.js';
+import BlockItem from './BlockItem.vue';
+
+const CONFIRM_MS = 2500;
+
+const t = useT();
+const custom = useCustomBlocksStore();
+
+// Delete buttons waiting for their second, confirming press.
+const sure = reactive({});
+
+function remove(id) {
+  if (!sure[id]) {
+    sure[id] = true;
+    setTimeout(() => { delete sure[id]; }, CONFIRM_MS);
+  } else {
+    delete sure[id];
+    custom.remove(id);
+  }
+}
+</script>
+
+<template>
+  <div id="clib">
+    <div v-if="!custom.offered.length" style="color:#9aa3d6;font-size:13px;font-weight:600;margin-top:6px">{{ t('ui.nocustom') }}</div>
+    <div v-for="id in custom.offered" :key="id" class="crow">
+      <BlockItem :node="{ id: 'lib-call-' + id, type: 'call', ref: id }" library />
+      <button class="mini" title="Edit" @click="custom.openEditor(id)">✏️</button>
+      <button class="mini" :class="{ sure: sure[id] }" title="Delete" @click="remove(id)">{{ sure[id] ? t('ui.sure') : '🗑' }}</button>
+    </div>
+  </div>
+</template>

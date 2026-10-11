@@ -1,0 +1,22 @@
+{
+  "id": "level-6",
+  "name": "Level 6",
+  "map": [
+    "WWWWWWWWWWWWWWW",
+    "WK            W",
+    "WWWWWWWWWWWWW W",
+    "W           W W",
+    "W WWWWWWWWW W W",
+    "W W       W W W",
+    "W W WWWWW W W W",
+    "W W W   W W W W",
+    "W W W WeW W W W",
+    "W W W WWW W W W",
+    "W W W     W W W",
+    "W W WWWWWWW W W",
+    "W W         W W",
+    "W WWWWWWWWWWW W",
+    "W             W",
+    "WWWWWWWWWWWWWWW"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "level-4",
+  "name": "Level 4",
+  "map": [
+    "WWWWWWWWWWWWWWW",
+    "WK            W",
+    "W             W",
+    "W             W",
+    "WbbbbbbbbbbbbbW",
+    "W             W",
+    "W             W",
+    "W         e   W",
+    "WWWWWWWWWWWWWWW"
+  ]
+}
