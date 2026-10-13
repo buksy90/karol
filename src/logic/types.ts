@@ -66,13 +66,35 @@ export interface World {
   roomMap: number[][];
   /** cumulative heading in degrees, for smooth turning */
   angle: number;
+  /** sprays still lying on the floor, by "x,y" */
+  sprays: Map<string, Spray>;
+  /** painted cells: "x,y" to #rrggbb */
+  paint: Map<string, string>;
+  /** the level's flags with their colours as #rrggbb */
+  flags: WorldFlag[];
+  /** the doors that flags open, as "x,y" */
+  flagDoors: Set<string>;
 }
 
-/** The inventory: each slot is empty (null) or holds an item. */
-export type Slots = (string | null)[];
+/** A colour as a level writes it: one of the eight names, or #rgb / #rrggbb. */
+export type Color = string;
+/** [x, y]: column from the left, row from the top, both from 0. */
+export type Position = [x: number, y: number];
 
-/** Why the robot cannot move forward. */
-export type Blocked = 'wall' | 'locked' | 'stuck';
+/** A spray as the world holds it. `color` is #rrggbb. */
+export interface Spray {
+  color: string;
+  uses: number;
+}
+
+/** What an inventory slot holds. */
+export type Item = { type: 'key' } | ({ type: 'spray' } & Spray);
+
+/** The inventory: each slot is empty (null) or holds an item. */
+export type Slots = (Item | null)[];
+
+/** Why the robot cannot move forward. `flagdoor` is a locked door that a flag opens. */
+export type Blocked = 'wall' | 'locked' | 'flagdoor' | 'stuck';
 
 export interface Probe {
   nx: number;
@@ -83,18 +105,47 @@ export interface Probe {
   push: { from: string; to: string } | null;
 }
 
-export type MoveResult =
-  | { moved: false; blocked: Blocked; key: null; won: false }
-  /** `key` is the 1-based slot filled, 'full', or null when no key was there. */
-  | { moved: true; blocked: null; key: number | 'full' | null; won: boolean };
+/** What a move picked up: the item and its 1-based slot, 'full', or null when nothing was there. */
+export type Picked = { slot: number; item: Item } | 'full' | null;
 
-export type UseResult = 'empty' | 'opened' | 'nothing';
+export type MoveResult =
+  | { moved: false; blocked: Blocked; picked: null; won: false }
+  | { moved: true; blocked: null; picked: Picked; won: boolean };
+
+export type UseResult =
+  | { result: 'empty' | 'opened' | 'nothing' }
+  /** `left` is the uses the spray still has; `flagDone` when this paint finished a flag. */
+  | { result: 'painted'; color: string; left: number; flagDone: boolean };
+
+/** A spray lying on the floor of a level. */
+export interface SprayItem {
+  type: 'spray';
+  position: Position;
+  color: Color;
+  uses: number;
+}
+
+/** A rectangle of floor to paint: `colors[row][column]`, with `position` its top-left cell. */
+export interface Flag {
+  position: Position;
+  colors: Color[][];
+  onDrawn: { unlockDoor: Position };
+}
+
+export interface WorldFlag extends Flag {
+  done: boolean;
+}
 
 export interface Level {
   id: string;
   name: string;
   map: string[];
+  items?: SprayItem[];
+  flags?: Flag[];
 }
+
+/** The part of a level the world is built from. */
+export type LevelContent = Pick<Level, 'map' | 'items' | 'flags'>;
 
 // ---- block and sensor definitions ----
 

@@ -11,7 +11,7 @@ import { blockStorage, build, reloadPage, run, setupStores, shape, step, t, tear
 
 // the level files, loaded the way src/main.ts loads them
 const builtIns = orderByFileName(import.meta.glob<Level>('../../levels/*.json', { eager: true, import: 'default' }));
-const BUILT_IN_IDS = ['level-1', 'level-2', 'level-3', 'level-4', 'level-5', 'level-6', 'level-7'];
+const BUILT_IN_IDS = ['level-1', 'level-2', 'level-3', 'level-4', 'level-5', 'level-6', 'level-7', 'level-8'];
 const myMaze: Level = { id: 'my-maze', name: 'My maze', map: ['WWWWW', 'WK eW', 'WWWWW'] };
 
 let stored: Map<string, string>;
@@ -31,7 +31,7 @@ describe('levels: Built-in levels', () => {
     const levels = start();
     expect(levels.current).toBe('level-1');
     expect(levels.levels.map(l => l.id)).toEqual(BUILT_IN_IDS);
-    expect(levels.levels.map(l => l.name)).toEqual(['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7']);
+    expect(levels.levels.map(l => l.name)).toEqual(['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6', 'Level 7', 'Level 8']);
     const world = useWorldStore();
     expect(world.map).toEqual(builtIns[0].map);
     expect([world.cols, world.rows]).toEqual([15, 4]);
@@ -107,7 +107,7 @@ describe('levels: Level picker', () => {
 describe('the next level', () => {
   it('has no next level on the last level', () => {
     const levels = start();
-    levels.load('level-7');
+    levels.load('level-8');
     expect(levels.next).toBeNull();
   });
 
@@ -162,18 +162,18 @@ describe('levels: Remembering levels', () => {
 describe('levels: Built-in level versioning', () => {
   it('Upgrade from an older version', () => {
     stored.set('karol.levels', JSON.stringify([{ id: 'level-1', name: 'Old level 1', map: ['WKW'] }, myMaze]));
-    stored.set('karol.ver', '4');
+    stored.set('karol.ver', '5');
     const levels = start();
     expect(levels.levels.map(l => l.id)).toEqual([...BUILT_IN_IDS, 'my-maze']);
     expect(levels.levels[0]).toEqual(builtIns[0]);
-    expect(stored.get('karol.ver')).toBe('5');
+    expect(stored.get('karol.ver')).toBe('6');
     expect(storedLevels().map(l => l.id)).toEqual([...BUILT_IN_IDS, 'my-maze']);
   });
 
   it('Same version', () => {
     const mine = [myMaze, { id: 'level-1', name: 'My level 1', map: ['WKW'] }];
     stored.set('karol.levels', JSON.stringify(mine));
-    stored.set('karol.ver', '5');
+    stored.set('karol.ver', '6');
     const levels = start();
     expect(levels.levels).toEqual(mine);
     expect(levels.current).toBe('my-maze');
@@ -181,7 +181,7 @@ describe('levels: Built-in level versioning', () => {
 
   it('stores the version on first start', () => {
     start();
-    expect(stored.get('karol.ver')).toBe('5');
+    expect(stored.get('karol.ver')).toBe('6');
   });
 });
 
@@ -200,7 +200,7 @@ describe('levels: Console export and import', () => {
     const levels = start();
     expect(levels.importLevels([myMaze])).toBe(1);
     expect(levels.levels.map(l => l.id)).toEqual([...BUILT_IN_IDS, 'my-maze']);
-    expect(storedLevels()[7]).toEqual(myMaze);
+    expect(storedLevels()[8]).toEqual(myMaze);
     expect(log).toHaveBeenCalledWith('Imported 1 level(s)');
     log.mockRestore();
   });
@@ -231,6 +231,40 @@ describe('levels: Console export and import', () => {
     const levels = start();
     levels.load('my-maze');
     expect(useWorldStore().map).toEqual(myMaze.map);
+    log.mockRestore();
+  });
+});
+
+describe('levels: Items and flags are kept', () => {
+  const flagged: Level = {
+    id: 'flagged', name: 'Flagged', map: ['WWWWWW', 'WK  LW', 'WWWWWW'],
+    items: [{ type: 'spray', position: [2, 1], color: '#1e90ff', uses: 2 }],
+    flags: [{ position: [3, 1], colors: [['#1E90FF']], onDrawn: { unlockDoor: [4, 1] } }],
+  };
+
+  it('Export and import', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    start().importLevels([flagged]);
+    const exported = JSON.stringify(useLevelsStore().exportLevels());
+    // another browser: nothing stored
+    stored.clear();
+    reloadPage();
+    const levels = start();
+    expect(levels.levels.some(l => l.id === 'flagged')).toBe(false);
+    levels.importLevels(exported);
+    expect(levels.levels.find(l => l.id === 'flagged')).toEqual(flagged);
+    log.mockRestore();
+  });
+
+  it('Reload', () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    start().importLevels([flagged]);
+    reloadPage();
+    const levels = start();
+    levels.load('flagged');
+    const world = useWorldStore();
+    expect([...world.sprays]).toEqual([['2,1', { color: '#1e90ff', uses: 2 }]]);
+    expect(world.flags).toEqual([{ position: [3, 1], colors: [['#1e90ff']], onDrawn: { unlockDoor: [4, 1] }, done: false }]);
     log.mockRestore();
   });
 });

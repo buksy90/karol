@@ -8,7 +8,7 @@ const placeholders = (text: string): string[] => (text.match(/\{\d+\}/g) || []).
 
 describe('language-support: Texts that are not translated', () => {
   it('New messages are translated', () => {
-    for (const key of ['ms.editlock', 'ms.dupname', 'ms.toodeep']) {
+    for (const key of ['ms.editlock', 'ms.dupname', 'ms.toodeep', 'ms.spray', 'ms.paint', 'ms.paintlast', 'ms.flag', 'ms.flagdoor']) {
       expect(slovak[key]).toBeTruthy();
       expect(slovak[key]).not.toBe(english[key]);
     }

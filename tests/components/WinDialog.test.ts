@@ -106,7 +106,7 @@ describe('levels: Win dialog', () => {
   });
 
   it('Last level', async () => {
-    await winOn('level-7');
+    await winOn('level-8');
     expect(buttonTexts(body())).toEqual([t('ui.stay'), t('ui.restart')]);
   });
 

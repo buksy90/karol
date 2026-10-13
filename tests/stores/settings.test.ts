@@ -82,9 +82,9 @@ describe('language-support: Switching language', () => {
     setProgram(move(), turn(), use(3), repeat(7, move()), move());
     const before = JSON.stringify(useProgramStore().blocks);
     const robot = { ...useWorldStore().robot };
-    expect(['rot', 'move', 'use', 'for'].map(label)).toEqual(['↶ Turn left', '⬆ Move forward', '🔑 Use item', '🔁 Repeat']);
+    expect(['rot', 'move', 'use', 'for'].map(label)).toEqual(['↶ Turn left', '⬆ Move forward', '🎒 Use item', '🔁 Repeat']);
     useSettingsStore().setLanguage('sk');
-    expect(['rot', 'move', 'use', 'for'].map(label)).toEqual(['↶ Doľava', '⬆ Choď', '🔑 Použi', '🔁 Zopakuj']);
+    expect(['rot', 'move', 'use', 'for'].map(label)).toEqual(['↶ Doľava', '⬆ Choď', '🎒 Použi', '🔁 Zopakuj']);
     expect(JSON.stringify(useProgramStore().blocks)).toBe(before);
     expect(useWorldStore().robot).toEqual(robot);
   });

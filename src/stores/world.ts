@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { parseMap } from '../logic/world.ts';
-import type { World } from '../logic/types.ts';
+import type { LevelContent, World } from '../logic/types.ts';
 import { useInventoryStore } from './inventory.ts';
 
 interface WorldState extends World {
-  /** the level map as loaded, kept for reset */
-  map: string[];
+  /** the level as loaded, kept for reset */
+  level: LevelContent;
   /** bumped on every reset so the view can snap the robot */
   resets: number;
 }
@@ -13,7 +13,7 @@ interface WorldState extends World {
 /** The tile world of the loaded level. The rules that change it are in logic/world.ts. */
 export const useWorldStore = defineStore('world', {
   state: (): WorldState => ({
-    map: [],                       // the level map as loaded, kept for reset
+    level: { map: [] },            // the level as loaded, kept for reset
     rows: 0,
     cols: 0,
     grid: [],                      // grid[y][x]: 'W' wall, ' ' floor, 'k' key, 'D' door, 'L' locked, 'O' unlocked, 'e' exit
@@ -21,16 +21,24 @@ export const useWorldStore = defineStore('world', {
     robot: { x: 1, y: 1, d: 1 },   // d: 0 north, 1 east, 2 south, 3 west
     angle: 90,                     // cumulative heading in degrees, for smooth turning
     roomMap: [],                   // room number per cell, -1 for walls and doors
+    sprays: new Map(),             // sprays on the floor by "x,y"
+    paint: new Map(),              // painted cells: "x,y" to #rrggbb
+    flags: [],                     // the level's flags and whether each is done
+    flagDoors: new Set(),          // the doors that flags open, as "x,y"
     resets: 0,                     // bumped on every reset so the view can snap the robot
   }),
+  getters: {
+    /** The level map as loaded. */
+    map: (state): string[] => state.level.map,
+  },
   actions: {
-    load(map: string[]) {
-      this.map = map;
+    load(level: LevelContent) {
+      this.level = level;
       this.reset();
     },
     /** Back to the level's initial state, with an empty inventory. */
     reset() {
-      Object.assign(this, parseMap(this.map));
+      Object.assign(this, parseMap(this.level.map, this.level.items, this.level.flags));
       useInventoryStore().reset();
       this.resets++;
     },

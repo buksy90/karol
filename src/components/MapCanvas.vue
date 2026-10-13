@@ -5,7 +5,7 @@ import { useUiStore } from '../stores/ui.ts';
 import { useWorldStore } from '../stores/world.ts';
 import { useExecutionStore } from '../stores/execution.ts';
 
-// The live map: tiles, crates, the robot and the sonar, redrawn every frame.
+// The live map: tiles, paint, flag targets, sprays, crates, the robot and the sonar, redrawn every frame.
 // While a block is dragged, the remove area covers it.
 const t = useT();
 const ui = useUiStore(), world = useWorldStore(), exec = useExecutionStore();
@@ -27,6 +27,14 @@ function floorColor(x: number, y: number) {
   return id < 0 ? '#e9e4d6' : PALETTE[id % 5][(x + y) % 2];
 }
 
+// A spray can in its colour, centred on cx,cy in a cell of size s.
+function drawSpray(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, color: string) {
+  const w = s * .34, h = s * .46, top = cy - h / 2 + s * .08;
+  ctx.fillStyle = '#9aa0b5'; ctx.fillRect(cx - w * .22, top - s * .12, w * .44, s * .13);
+  ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(cx - w / 2, top, w, h, s * .06); ctx.fill();
+  ctx.strokeStyle = '#33364d'; ctx.lineWidth = Math.max(1, s * .03); ctx.stroke();
+}
+
 function frame() {
   frameId = requestAnimationFrame(frame);
   const cv = canvas.value;
@@ -38,17 +46,31 @@ function frame() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = '#4a4e8a'; ctx.fillRect(0, 0, w, h);
   const s = Math.min(w / COLS, h / ROWS), ox = (w - s * COLS) / 2, oy0 = (h - s * ROWS) / 2;
   ctx.translate(ox, oy0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = (s * .7) + 'px serif';
+  // the colour each flag cell has to get
+  const targets = new Map<string, string>();
+  for (const flag of world.flags) flag.colors.forEach((row, j) => row.forEach((color, i) => targets.set((flag.position[0] + i) + ',' + (flag.position[1] + j), color)));
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-    const c = grid[y][x], px = x * s, py = y * s;
+    const c = grid[y][x], px = x * s, py = y * s, here = x + ',' + y;
     if (c === 'W') {
       ctx.fillStyle = '#7a5c9e'; ctx.fillRect(px, py, s, s); ctx.fillStyle = '#9a7cc0'; ctx.fillRect(px, py, s, s * .45);
       ctx.strokeStyle = '#5e4580'; ctx.lineWidth = 1; ctx.strokeRect(px + .5, py + .5, s - 1, s - 1); continue;
     }
-    ctx.fillStyle = floorColor(x, y); ctx.fillRect(px, py, s, s);
+    const paint = world.paint.get(here);
+    ctx.fillStyle = paint || floorColor(x, y); ctx.fillRect(px, py, s, s);
+    // an outline keeps white and yellow paint apart from the pale floors
+    if (paint) { ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 1; ctx.strokeRect(px + .5, py + .5, s - 1, s - 1); }
     if (c === 'D' || c === 'O') { ctx.fillStyle = '#c98f4f'; ctx.fillRect(px + s * .1, py, s * .8, s); ctx.fillStyle = '#e8b57a'; ctx.fillRect(px + s * .2, py + s * .1, s * .6, s * .8); }
-    if (c === 'L') { ctx.fillStyle = '#d94b4b'; ctx.fillRect(px, py, s, s); ctx.fillStyle = '#fff'; ctx.fillText('🔒', px + s / 2, py + s / 2); }
+    if (c === 'L') { ctx.fillStyle = '#d94b4b'; ctx.fillRect(px, py, s, s); ctx.fillStyle = '#fff'; ctx.fillText(world.flagDoors.has(here) ? '🎨' : '🔒', px + s / 2, py + s / 2); }
     if (c === 'k') ctx.fillText('🔑', px + s / 2, py + s / 2);
     if (c === 'e') { ctx.fillStyle = '#7ee0a0'; ctx.fillRect(px, py, s, s); ctx.fillText('🏁', px + s / 2, py + s / 2); }
+    // a flag cell that does not have its colour yet shows a dot in that colour
+    const target = targets.get(here);
+    if (target && target !== paint) {
+      ctx.fillStyle = target; ctx.beginPath(); ctx.arc(px + s / 2, py + s / 2, s * .17, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#33364d'; ctx.lineWidth = Math.max(1, s * .03); ctx.stroke();
+    }
+    const spray = world.sprays.get(here);
+    if (spray) drawSpray(ctx, px + s / 2, py + s / 2, s, spray.color);
   }
   world.boxes.forEach(b => {
     const [x, y] = b.split(',').map(Number), p = s * .1;

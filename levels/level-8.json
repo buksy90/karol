@@ -1,0 +1,29 @@
+{
+  "id": "level-8",
+  "name": "Level 8",
+  "map": [
+    "WWWWWWWWWWWWWWW",
+    "WK      d   WWW",
+    "WWWWWWWWW   WWW",
+    "WWWWWWWWW   L W",
+    "WWWWWWWWWWWWW W",
+    "WWWWWWWWWWWWWeW",
+    "WWWWWWWWWWWWWWW"
+  ],
+  "items": [
+    { "type": "spray", "position": [3, 1], "color": "black", "uses": 3 },
+    { "type": "spray", "position": [5, 1], "color": "red", "uses": 3 },
+    { "type": "spray", "position": [7, 1], "color": "yellow", "uses": 3 }
+  ],
+  "flags": [
+    {
+      "position": [9, 1],
+      "colors": [
+        ["black", "black", "black"],
+        ["red", "red", "red"],
+        ["yellow", "yellow", "yellow"]
+      ],
+      "onDrawn": { "unlockDoor": [12, 3] }
+    }
+  ]
+}

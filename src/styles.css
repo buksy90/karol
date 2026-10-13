@@ -37,6 +37,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:16px}
 .slot{width:40px;height:40px;border-radius:10px;background:#eef1ff;border:2px solid #c3cbf0;position:relative;display:flex;align-items:center;justify-content:center;font-size:22px}
 .slot b{position:absolute;left:3px;top:0;font-size:10px;color:#6b72a8}
 .slot.full{background:#fff7d6;border-color:#ffc300}
+/* a spray: the slot in the spray's colour (--spray), the uses left in the corner */
+.slot.spray{background:var(--spray);border-color:color-mix(in srgb,var(--spray) 70%,#000)}
+.slot .uses{position:absolute;right:3px;bottom:0;font-size:13px;font-weight:700;line-height:1.2}
+/* readable on any colour: white with a dark halo, or the contrasting colour where CSS can pick it */
+.slot.spray b,.slot .uses{color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 0 1px #000}
+@supports (color:contrast-color(red)){.slot.spray b,.slot .uses{color:contrast-color(var(--spray));text-shadow:none}}
 #spd{display:flex;gap:6px;align-items:center;font-weight:800;font-size:13px;color:#6b72a8}
 #spd button{padding:6px 10px;background:#c3cbf0;color:#2b2d42;flex:1}#spd button.on{background:#ff9f1c;color:#fff}
 #msg{flex:1;min-width:180px}

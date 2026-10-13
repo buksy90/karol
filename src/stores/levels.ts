@@ -39,7 +39,7 @@ export const useLevelsStore = defineStore('levels', {
       const level = this.levels.find(l => l.id === id) || this.levels[0];
       this.current = level.id;
       useExecutionStore().end();
-      useWorldStore().load(level.map);
+      useWorldStore().load(level);
       // every level has its own program
       useProgramStore().load(level.id);
       useExecutionStore().clearMarks();

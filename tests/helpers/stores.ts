@@ -1,7 +1,7 @@
 // Store tests: a fresh set of stores per test, local and session storage in memory, time under control.
 import { createPinia, setActivePinia } from 'pinia';
 import { vi } from 'vitest';
-import type { BlockDef, Level, MessageKey, ProgramNode } from '../../src/logic/types.ts';
+import type { BlockDef, Level, LevelContent, MessageKey, ProgramNode } from '../../src/logic/types.ts';
 import { defs } from '../../src/blocks/index.ts';
 import { session } from '../../src/logic/storage.ts';
 import { useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
@@ -71,7 +71,12 @@ export function blockStorage(): void {
 }
 
 export function loadMap(...rows: string[]): void {
-  useWorldStore().load(rows);
+  useWorldStore().load({ map: rows });
+}
+
+/** Load a map together with its sprays and flags. */
+export function loadLevel(level: LevelContent): void {
+  useWorldStore().load(level);
 }
 
 export function setProgram(...blocks: ProgramNode[]): void {

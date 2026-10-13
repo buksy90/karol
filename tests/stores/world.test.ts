@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { KEY } from '../../src/logic/world.ts';
+import { COLOR_NAMES } from '../../src/logic/colors.ts';
+import type { LevelContent } from '../../src/logic/types.ts';
 import { useInventoryStore } from '../../src/stores/inventory.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { move, turn, use } from '../helpers/program.ts';
-import { loadMap, play, robotAt, setupStores, teardownStores } from '../helpers/stores.ts';
+import { loadLevel, loadMap, play, robotAt, setupStores, teardownStores } from '../helpers/stores.ts';
 
 beforeEach(() => { setupStores(); });
 afterEach(teardownStores);
@@ -46,7 +47,7 @@ describe('world: Inventory', () => {
     const inventory = useInventoryStore();
     expect(inventory.slots).toEqual(Array(8).fill(null));
     play(move());
-    expect(inventory.slots[0]).toBe(KEY);
+    expect(inventory.slots[0]).toEqual({ type: 'key' });
     useWorldStore().reset();
     expect(inventory.slots).toEqual(Array(8).fill(null));
   });
@@ -83,5 +84,53 @@ describe('world: Level reset', () => {
     const world = useWorldStore();
     expect([world.cols, world.rows]).toEqual([5, 4]);
     expect(world.robot).toEqual({ x: 3, y: 2, d: 1 });
+  });
+});
+
+/** A spray, then two cells that are a flag, then the door the flag opens. */
+const PAINT_LEVEL: LevelContent = {
+  map: ['WWWWWWW', 'WK   LW', 'WWWWWWW'],
+  items: [{ type: 'spray', position: [2, 1], color: 'red', uses: 3 }],
+  flags: [{ position: [3, 1], colors: [['red', 'red']], onDrawn: { unlockDoor: [5, 1] } }],
+};
+
+describe('world: Level reset (painting)', () => {
+  it('Reset after painting', () => {
+    loadLevel(PAINT_LEVEL);
+    const world = useWorldStore(), inventory = useInventoryStore();
+    play(move(), move(), use(1), move(), use(1));
+    expect([...world.paint.keys()]).toEqual(['3,1', '4,1']);
+    expect(world.sprays.size).toBe(0);
+    expect(inventory.slots[0]).toEqual({ type: 'spray', color: COLOR_NAMES.red, uses: 1 });
+    expect(world.flags[0].done).toBe(true);
+    expect(world.grid[1][5]).toBe('O');
+    world.reset();
+    expect([...world.sprays]).toEqual([['2,1', { color: COLOR_NAMES.red, uses: 3 }]]);
+    expect(world.paint.size).toBe(0);
+    expect(world.flags[0].done).toBe(false);
+    expect(world.grid[1][5]).toBe('L');
+    expect(inventory.slots.every(slot => slot === null)).toBe(true);
+  });
+
+  it('a second run starts with full sprays, and the level itself is never changed', () => {
+    loadLevel(PAINT_LEVEL);
+    const before = JSON.stringify(PAINT_LEVEL);
+    play(move(), use(1), use(1), use(1));
+    expect(useInventoryStore().slots[0]).toBeNull();
+    play(move());
+    expect(useInventoryStore().slots[0]).toEqual({ type: 'spray', color: COLOR_NAMES.red, uses: 3 });
+    expect(JSON.stringify(PAINT_LEVEL)).toBe(before);
+  });
+});
+
+describe('painting: Finishing a flag opens its door', () => {
+  it('Reset', () => {
+    loadLevel(PAINT_LEVEL);
+    const world = useWorldStore();
+    play(move(), move(), use(1), move(), use(1), move());
+    expect(robotAt()).toBe('5,1');
+    world.reset();
+    expect(world.paint.size).toBe(0);
+    expect(world.grid[1][5]).toBe('L');
   });
 });

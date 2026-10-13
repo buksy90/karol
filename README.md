@@ -1,6 +1,6 @@
 # Robot Karol
 
-A visual-programming game for kids. The player builds a program from blocks and a robot runs it on a tile map: it walks, pushes crates, picks up keys, unlocks doors and has to reach the exit. English and Slovak.
+A visual-programming game for kids. The player builds a program from blocks and a robot runs it on a tile map: it walks, pushes crates, picks up keys, unlocks doors, sprays the floor into flags and has to reach the exit. English and Slovak.
 
 What the game does is described in `openspec/specs/`, one specification per capability. Each has a `## Code` section listing the files that implement it.
 
@@ -55,13 +55,13 @@ openspec/             specifications and changes
 Adding things:
 
 - **A block or sensor**: add a module in `src/blocks/` or `src/sensors/` and list it in that folder's `index.ts`. Type the definition with `satisfies` and the matching type from `src/logic/types.ts` (`ActionDef`, `ContainerDef`, `SensorDef`, `OperatorDef`).
-- **A level**: add `levels/<id>.json` with `id`, `name` and `map`. Files are ordered by name, numbers compared as numbers.
+- **A level**: add `levels/<id>.json` with `id`, `name` and `map`. Files are ordered by name, numbers compared as numbers. A level can also have `items` (sprays lying on the floor, each with a `color` and a number of `uses`) and `flags` (a rectangle of floor, the colour each cell has to get, and the locked door that opens when it is painted); `levels/level-8.json` is the example. Positions are `[x, y]`, column from the left and row from the top, both from 0. A colour is one of red, orange, yellow, green, blue, purple, black, white, or a hex value such as `#1e90ff`. Bump `BUILTIN_VERSION` in `src/logic/levels.ts` when a built-in level is added or changed.
 - **A text**: add the key to `locales/en.json` first; that is what makes it usable in code.
 - **A language**: add `locales/<code>.json` and an entry in `LANGUAGES` in `src/stores/settings.ts`.
 
 ## Tests
 
-The unit tests cover the logic layer and the stores. They run in Node with [Vitest](https://vitest.dev), with no browser. Three files go further and mount real components in [happy-dom](https://github.com/capricorn86/happy-dom): the keyboard shortcuts, the win dialog, and dragging the sensor into a slot. Rendering, sounds and the rest of drag and drop are not covered; check those by hand.
+The unit tests cover the logic layer and the stores. They run in Node with [Vitest](https://vitest.dev), with no browser. The files in `tests/components` and `tests/composables` go further and mount real components in [happy-dom](https://github.com/capricorn86/happy-dom): the keyboard shortcuts, drag and drop, the win dialog, the inventory slots and others. Drawing on the map canvas, the colours of the inventory slots, sounds and the rest of drag and drop are not covered; check those by hand.
 
 ```
 tests/
