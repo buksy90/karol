@@ -5,8 +5,9 @@ The program editor is where the player builds a program without typing: blocks a
 
 ## Code
 
-- `src/logic/program.ts` - the program tree: create, copy, locate, selection rules
-- `src/stores/program.ts` - the program
+- `src/logic/program.ts` - the program tree: create, copy, locate, restore from storage, selection rules; which typed numbers a block keeps
+- `src/stores/program.ts` - the program of the current level; saving and loading it per level
+- `src/logic/storage.ts` - guarded session storage, where the programs are kept
 - `src/stores/ui.ts` - drag state, select mode and selection, collapsed sections
 - `src/blocks/index.ts` - the Blocks section of the library and all block definitions
 - `src/composables/useDragDrop.ts` - dragging, the drop preview, the remove area
@@ -17,9 +18,15 @@ The program editor is where the player builds a program without typing: blocks a
 - `src/components/BlockItem.vue` - one block, rendered from its definition
 - `src/components/RunControls.vue` - the Clear button
 - `tests/logic/program.test.ts` - tests of the program tree
-- `tests/stores/program.test.ts` - tests of the program store
+- `tests/stores/program.test.ts` - tests of the program store, including the program kept per level
+- `tests/logic/storage.test.ts` - tests of the guarded session storage
+- `tests/composables/useDragDrop.test.ts` - tests that a drop saves the program
 - `tests/stores/ui.test.ts` - tests of select mode, selection and collapsing sections
 - `tests/blocks/index.test.ts` - tests of the block registry
+- `tests/components/RunControls.test.ts` - tests of the Clear button
+- `tests/components/BlockItem.test.ts` - tests of the number field
+- `src/composables/useShortcuts.ts` - commits a number still being typed when a run starts from the keyboard
+- `tests/composables/useShortcuts.test.ts` - test of a run started while typing a number
 
 ## Requirements
 
@@ -132,12 +139,32 @@ A block that was just added or moved SHALL glow yellow and fade back to normal o
 - **THEN** no sound plays
 
 ### Requirement: Editing numbers on a block
-The number on a Use item or Repeat block SHALL be editable in place, and pressing on the number field SHALL NOT start a drag.
+The number on a Use item or Repeat block SHALL be editable in place, and pressing on the number field SHALL NOT start a drag. Only whole numbers in the block's range SHALL be kept: 1 to 8 for Use item, 1 to 99 for Repeat. When the field is left, or a run is started, with an empty, fractional, non-numeric or out-of-range value, the field SHALL return to its last valid value.
 
 #### Scenario: Changing a number
 - **GIVEN** a Repeat 2 times block in the program
-- **WHEN** the player clicks the number and types 5
+- **WHEN** the player clicks the number, types 5 and clicks elsewhere
 - **THEN** the block reads Repeat 5 times and has not moved
+
+#### Scenario: Out of range
+- **GIVEN** a Use item 3 block
+- **WHEN** the player types 12 and clicks elsewhere
+- **THEN** the block reads Use item 3
+
+#### Scenario: Emptied field
+- **GIVEN** a Repeat 4 times block
+- **WHEN** the player deletes the number and clicks elsewhere
+- **THEN** the block reads Repeat 4 times
+
+#### Scenario: Fraction
+- **GIVEN** a Repeat 4 times block
+- **WHEN** the player types 2.5 and clicks elsewhere
+- **THEN** the block reads Repeat 4 times
+
+#### Scenario: Run started from the keyboard while typing
+- **GIVEN** the player typed 500 into a Repeat 4 times block and the field still has focus
+- **WHEN** the player presses F5
+- **THEN** the block reads Repeat 4 times and the loop runs four rounds
 
 ### Requirement: Mouse and touch
 All dragging SHALL work the same with a mouse and with a finger on a touch screen.
@@ -148,12 +175,22 @@ All dragging SHALL work the same with a mouse and with a finger on a touch scree
 - **THEN** the block follows the finger and the page does not scroll
 
 ### Requirement: Clear
-The Clear button SHALL remove all blocks from the program and show "Program cleared.". It SHALL be ignored while the program runs automatically. It SHALL NOT move the robot or change the map.
+The Clear button SHALL remove all blocks from the current level's program and show "Program cleared.". It SHALL be ignored from the first Run or Step until the run has ended. It SHALL NOT move the robot or change the map.
 
 #### Scenario: Clearing
 - **GIVEN** a program of five blocks and no run active
 - **WHEN** the player presses Clear
 - **THEN** the program is empty and the status line shows "Program cleared."
+
+#### Scenario: Clear while paused
+- **GIVEN** a paused run
+- **WHEN** the player presses Clear
+- **THEN** the program is unchanged and the run is still paused
+
+#### Scenario: Cleared program stays cleared
+- **GIVEN** the player cleared the program of level 2
+- **WHEN** the player switches to another level and back
+- **THEN** the program of level 2 is empty
 
 ### Requirement: Select mode
 The Select button in the program panel SHALL switch select mode on and change to "✓ Done". In select mode, clicking a block in the program SHALL select or unselect it instead of dragging it. Selected blocks SHALL have a yellow outline and the status line SHALL show how many are selected. Select mode SHALL end when Done is pressed, a run starts or the custom block editor opens.
@@ -191,10 +228,25 @@ A selection SHALL consist of adjacent blocks of one list. Clicking a block that 
 - **WHEN** the player clicks a block inside a Repeat block
 - **THEN** only that inner block is selected
 
-### Requirement: Program is not persisted
-The program SHALL exist only until the page is reloaded.
+### Requirement: Program kept per level
+Each level SHALL have its own program. Every change to the program SHALL be saved for the current level in the browser's session storage, and the saved program SHALL be shown whenever that level is loaded, including after a page reload in the same tab. A level without a saved program SHALL start empty. If session storage is unavailable, programs SHALL be kept until the page is reloaded.
 
-#### Scenario: Reload
-- **GIVEN** a program of five blocks
+#### Scenario: Reload in the same tab
+- **GIVEN** a program of five blocks on level 2, including a Repeat 4 times block with an If block inside
 - **WHEN** the page is reloaded
+- **THEN** level 2 is shown with the same five blocks, numbers, nesting and conditions
+
+#### Scenario: New tab
+- **GIVEN** a program was built in one browser tab
+- **WHEN** the game is opened in a new tab
 - **THEN** the program is empty
+
+#### Scenario: Two levels, two programs
+- **GIVEN** three blocks built on level 1 and one block built on level 2
+- **WHEN** the player switches between the two levels
+- **THEN** level 1 always shows its three blocks and level 2 its one block
+
+#### Scenario: Storage blocked
+- **GIVEN** the browser refuses access to session storage
+- **WHEN** the player switches from level 1 to level 2 and back
+- **THEN** level 1 still shows its program and no error is shown

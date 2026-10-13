@@ -1,7 +1,7 @@
 // The program as data: a list of blocks, each {id, type, n?, cond?, children?, ref?}.
 // `cond` is a condition block (a sensor, or a Not holding its own `cond`);
 // `children` is the body of a container; `ref` is the custom block a call points at.
-import type { BlockDef, CondLocation, Located, ProgramNode } from './types.ts';
+import type { BlockDef, BlockDefs, CondLocation, CustomBlocks, Located, ProgramNode } from './types.ts';
 
 let seq = 0;
 export const newId = (): string => 'b' + (++seq);
@@ -16,6 +16,17 @@ export function createNode(def: BlockDef, ref?: string | null): ProgramNode {
   return node;
 }
 
+/**
+ * What the player typed into a number field, as the number a block may keep:
+ * a whole number in the range, or null for anything else.
+ */
+export function parseNumber(text: string, range: { min: number; max: number }): number | null {
+  const digits = text.trim();
+  if (!/^\d+$/.test(digits)) return null;
+  const n = Number(digits);
+  return n >= range.min && n <= range.max ? n : null;
+}
+
 /** Deep copy with fresh ids. */
 export function cloneNode(node: ProgramNode): ProgramNode {
   const copy: ProgramNode = { ...node, id: newId() };
@@ -27,6 +38,34 @@ export const cloneList = (list: ProgramNode[]): ProgramNode[] => list.map(cloneN
 
 /** Deep copy that keeps ids: what a run executes, so later edits do not reach it. */
 export const snapshot = (list: ProgramNode[]): ProgramNode[] => JSON.parse(JSON.stringify(list));
+
+const own = (object: object, key: unknown): key is string =>
+  typeof key === 'string' && Object.prototype.hasOwnProperty.call(object, key);
+
+/**
+ * Rebuild a list of blocks from stored data, with fresh ids: stored ids come from an earlier
+ * page load and would collide with new ones. What cannot be shown is dropped, at any depth:
+ * a block of an unknown type and a call to a custom block that does not exist.
+ * Anything that is not a list gives an empty one.
+ */
+export function restoreList(stored: unknown, defs: BlockDefs, customs: CustomBlocks): ProgramNode[] {
+  const restore = (item: unknown, asCondition: boolean): ProgramNode | null => {
+    if (!item || typeof item !== 'object') return null;
+    const from = item as Record<string, unknown>;
+    if (!own(defs, from.type)) return null;
+    const def = defs[from.type];
+    if ((def.kind === 'condition') !== asCondition) return null;
+    if (def.kind === 'call' && !own(customs, from.ref)) return null;
+    const node = createNode(def, def.kind === 'call' ? from.ref as string : null);
+    if (def.number) node.n = parseNumber(String(from.n), def.number) ?? def.number.default;
+    if (def.hasCond) node.cond = restore(from.cond, true);
+    if (def.hasBody) node.children = list(from.children);
+    return node;
+  };
+  const list = (items: unknown): ProgramNode[] =>
+    Array.isArray(items) ? items.map(item => restore(item, false)).filter(node => node !== null) : [];
+  return list(stored);
+}
 
 /**
  * Where a block sits: in a list, or in the condition slot of another block.

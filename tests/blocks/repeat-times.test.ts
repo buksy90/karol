@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createNode } from '../../src/logic/program.ts';
 import { defs } from '../../src/blocks/index.ts';
 import { useExecutionStore } from '../../src/stores/execution.ts';
-import { useProgramStore } from '../../src/stores/program.ts';
 import { useSettingsStore } from '../../src/stores/settings.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { call, move, repeat, turn } from '../helpers/program.ts';
@@ -36,28 +35,14 @@ describe('block-repeat-times: Fixed number of rounds', () => {
   });
 });
 
-describe('block-repeat-times: Round count limits at run time', () => {
-  it('Zero rounds typed', () => {
+describe('repeat-times run', () => {
+  // The number field keeps only 1 to 99; this is the guard behind it.
+  it('clamps a round count outside 1 to 99', () => {
     corridor();
     play(repeat(0, move()));
     expect(robotAt()).toBe('2,1');
-    expect(useProgramStore().blocks[0].n).toBe(0);
-  });
-
-  it('Too many rounds typed', () => {
-    corridor();
     play(repeat(500, turn()));
     expect(turnsMade()).toBe(99);
-    expect(useProgramStore().blocks[0].n).toBe(500);
-  });
-
-  it('treats an empty field and a negative number as 1', () => {
-    corridor();
-    play(repeat('', move()));
-    expect(robotAt()).toBe('2,1');
-    expect(useProgramStore().blocks[0].n).toBe('');
-    play(repeat(-3, move()));
-    expect(robotAt()).toBe('2,1');
   });
 });
 

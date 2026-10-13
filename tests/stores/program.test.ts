@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
-import { useProgramStore } from '../../src/stores/program.ts';
+import { useExecutionStore } from '../../src/stores/execution.ts';
+import { useLevelsStore } from '../../src/stores/levels.ts';
+import { PROGRAMS_KEY, useProgramStore } from '../../src/stores/program.ts';
+import { useUiStore } from '../../src/stores/ui.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
-import { canGo, move, repeat, turn, when } from '../helpers/program.ts';
-import { loadMap, play, reloadPage, setProgram, setupStores, teardownStores } from '../helpers/stores.ts';
+import { call, canGo, move, not, repeat, turn, use, when } from '../helpers/program.ts';
+import { addCustom, blockStorage, build, inSession, loadMap, newTab, play, reloadPage, run, setProgram, setupStores, shape, startGame, t, teardownStores, TWO_LEVELS } from '../helpers/stores.ts';
 
 beforeEach(() => { setupStores(); });
 afterEach(teardownStores);
@@ -22,11 +25,132 @@ describe('program-editor: Clear', () => {
   });
 });
 
-describe('program-editor: Program is not persisted', () => {
-  it('Reload', () => {
-    setProgram(move(), turn(), move(), turn(), move());
+describe('program-editor: Clear', () => {
+  it('Cleared program stays cleared', () => {
+    startGame();
+    const levels = useLevelsStore(), program = useProgramStore();
+    levels.load('two');
+    build(move(), turn());
+    program.clear();
+    levels.load('one');
+    levels.load('two');
+    expect(program.blocks).toEqual([]);
     reloadPage();
+    startGame();
     expect(useProgramStore().blocks).toEqual([]);
+  });
+});
+
+describe('program-editor: Program kept per level', () => {
+  it('Reload in the same tab', () => {
+    startGame();
+    useLevelsStore().load('two');
+    const built = [move(), turn(), repeat(4, when(not(canGo()), turn(), use(3))), move(), turn()];
+    build(...built);
+    reloadPage();
+    startGame();
+    expect(useLevelsStore().current).toBe('two');
+    const program = useProgramStore().blocks;
+    expect(program).toHaveLength(5);
+    expect(shape(program)).toEqual(shape(built));
+    expect(program[2]).toMatchObject({ type: 'for', n: 4 });
+    expect(program[2].children![0].cond).toMatchObject({ type: 'not', cond: { type: 'canfwd' } });
+  });
+
+  it('New tab', () => {
+    startGame();
+    build(move(), turn());
+    newTab();
+    startGame();
+    expect(useProgramStore().blocks).toEqual([]);
+  });
+
+  it('Two levels, two programs', () => {
+    startGame();
+    const levels = useLevelsStore(), program = useProgramStore();
+    const onOne = [move(), move(), turn()], onTwo = [turn()];
+    build(...onOne);
+    levels.load('two');
+    expect(program.blocks).toEqual([]);
+    build(...onTwo);
+    for (let i = 0; i < 2; i++) {
+      levels.load('one');
+      expect(shape(program.blocks)).toEqual(shape(onOne));
+      levels.load('two');
+      expect(shape(program.blocks)).toEqual(shape(onTwo));
+    }
+  });
+
+  it('Storage blocked', () => {
+    blockStorage();
+    startGame();
+    const levels = useLevelsStore(), program = useProgramStore(), ui = useUiStore();
+    const onOne = [move(), repeat(2, turn())];
+    build(...onOne);
+    expect(() => levels.load('two')).not.toThrow();
+    expect(program.blocks).toEqual([]);
+    levels.load('one');
+    expect(shape(program.blocks)).toEqual(shape(onOne));
+    expect(ui.status).toBe(t('ms.loaded', 'One'));
+    // until the page is reloaded
+    reloadPage();
+    startGame();
+    expect(useProgramStore().blocks).toEqual([]);
+  });
+
+  it('saves under karol.programs, by level id, on every change and not on loading', () => {
+    startGame();
+    expect(inSession(PROGRAMS_KEY)).toBeUndefined();
+    const levels = useLevelsStore();
+    build(move());
+    levels.load('two');
+    expect(Object.keys(inSession(PROGRAMS_KEY) as object)).toEqual(['one']);
+    build(turn(), turn());
+    const saved = inSession(PROGRAMS_KEY) as Record<string, { type: string }[]>;
+    expect(saved.one.map(block => block.type)).toEqual(['move']);
+    expect(saved.two.map(block => block.type)).toEqual(['rot', 'rot']);
+  });
+
+  it('a program that was not saved is gone after a level switch: only changed() keeps it', () => {
+    startGame();
+    setProgram(move());
+    useLevelsStore().load('two');
+    useLevelsStore().load('one');
+    expect(useProgramStore().blocks).toEqual([]);
+  });
+
+  it('gives the blocks of a loaded program new ids, so nothing of the last run stays marked', () => {
+    startGame();
+    const first = move();
+    build(first);
+    run();
+    const execution = useExecutionStore();
+    expect(execution.ok).not.toEqual({});
+    useLevelsStore().load('one');
+    expect(execution.ok).toEqual({});
+    expect(useProgramStore().blocks[0].id).not.toBe(first.id);
+  });
+
+  it('drops calls to custom blocks that no longer exist when a program is loaded', () => {
+    startGame();
+    const corner = addCustom('Corner', turn());
+    build(move(), call(corner), repeat(2, call(corner)));
+    reloadPage();
+    // the programs survive, the custom blocks are made to be missing
+    useLevelsStore().init(TWO_LEVELS);
+    const program = useProgramStore().blocks;
+    expect(program.map(block => block.type)).toEqual(['move', 'for']);
+    expect(program[1].children).toEqual([]);
+  });
+
+  it('changed() clears the marks of the last run, also when no level is loaded', () => {
+    loadMap('WWWW', 'WK W', 'WWWW');
+    run(move());
+    const execution = useExecutionStore();
+    expect(execution.ok).not.toEqual({});
+    useProgramStore().changed();
+    expect([execution.ok, execution.err, execution.counts]).toEqual([{}, {}, {}]);
+    expect(inSession(PROGRAMS_KEY)).toBeUndefined();
   });
 });
 

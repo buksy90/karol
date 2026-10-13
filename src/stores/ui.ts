@@ -5,8 +5,8 @@ import type { DragState } from '../composables/useDragDrop.ts';
 import { useSettingsStore } from './settings.ts';
 import { useProgramStore } from './program.ts';
 
-/** Levels, specs, options, and the dialog shown after reaching the exit. */
-export type DialogKind = 'lv' | 'sp' | 'op' | 'win';
+/** Levels, options, and the dialog shown after reaching the exit. */
+export type DialogKind = 'lv' | 'op' | 'win';
 /** The collapsible sections of the block library. */
 export type LibrarySection = 'sensors' | 'blocks' | 'custom';
 
@@ -27,7 +27,7 @@ interface UiState {
 export const useUiStore = defineStore('ui', {
   state: (): UiState => ({
     status: 'Build a program and press Run!',
-    dialog: null,            // null | 'lv' | 'sp' | 'op' | 'win'
+    dialog: null,            // null | 'lv' | 'op' | 'win'
     collapsed: { sensors: false, blocks: false, custom: false },
     selMode: false,
     selected: [],            // ids of selected program blocks

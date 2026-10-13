@@ -3,23 +3,16 @@ import { useT } from '../composables/useT.ts';
 import { useUiStore } from '../stores/ui.ts';
 import { useWorldStore } from '../stores/world.ts';
 import { useProgramStore } from '../stores/program.ts';
-import { useExecutionStore } from '../stores/execution.ts';
 import { useLevelsStore } from '../stores/levels.ts';
 
 const t = useT();
-const ui = useUiStore(), world = useWorldStore(), program = useProgramStore(), exec = useExecutionStore(), levels = useLevelsStore();
+const ui = useUiStore(), world = useWorldStore(), program = useProgramStore(), levels = useLevelsStore();
 
-function clearProgram() {
-  program.clear();
-  exec.clearMarks();
-  ui.clearSelection();
-}
-
+// The next level comes with its own program; the one that solved this level stays saved here.
 function nextLevel() {
   const next = levels.next;
   ui.closeDialog();
   levels.load(next!.id);
-  clearProgram();
 }
 function stay() {
   ui.closeDialog();
@@ -29,7 +22,8 @@ function stay() {
 function restart() {
   ui.closeDialog();
   world.reset();
-  clearProgram();
+  program.clear();
+  ui.clearSelection();
   ui.say(t('ms.ready'));
 }
 </script>

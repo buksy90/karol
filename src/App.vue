@@ -35,7 +35,7 @@ onUnmounted(() => document.removeEventListener('input', onInput));
 </script>
 
 <template>
-  <div id="app" :class="{ editing: !!custom.draft }">
+  <div id="app" :class="{ editing: !!custom.draft, locked: exec.active }">
     <div id="left">
       <BlockLibrary />
       <ProgramPanel />

@@ -7,7 +7,7 @@ import { useProgramStore } from '../../src/stores/program.ts';
 import { useUiStore } from '../../src/stores/ui.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { move, turn } from '../helpers/program.ts';
-import { blockStorage, reloadPage, run, setProgram, setupStores, step, t, teardownStores } from '../helpers/stores.ts';
+import { blockStorage, build, reloadPage, run, setupStores, shape, step, t, teardownStores } from '../helpers/stores.ts';
 
 // the level files, loaded the way src/main.ts loads them
 const builtIns = orderByFileName(import.meta.glob<Level>('../../levels/*.json', { eager: true, import: 'default' }));
@@ -59,7 +59,7 @@ describe('the first level', () => {
 describe('levels: Level picker', () => {
   it('Choosing another level', () => {
     const levels = start();
-    setProgram(move(), turn(), move());
+    build(move(), turn(), move());
     step();
     levels.load('level-3');
     const world = useWorldStore();
@@ -69,9 +69,38 @@ describe('levels: Level picker', () => {
     expect(builtIns[2].map[world.robot.y][world.robot.x]).toBe('K');
     expect(world.robot.d).toBe(1);
     expect(useUiStore().status).toBe(t('ms.loaded', 'Level 3'));
-    expect(useProgramStore().blocks).toHaveLength(3);
-    // the run that was being stepped is over
+    expect(useProgramStore().blocks).toEqual([]);
+    // the run that was being stepped is over, and its dots are gone
     expect(useExecutionStore().active).toBe(false);
+    expect(useExecutionStore().ok).toEqual({});
+  });
+
+  it('Returning to a level', () => {
+    const levels = start();
+    const built = [move(), turn(), move()];
+    build(...built);
+    levels.load('level-3');
+    levels.load('level-1');
+    expect(shape(useProgramStore().blocks)).toEqual(shape(built));
+    expect(useUiStore().status).toBe(t('ms.loaded', 'Level 1'));
+  });
+
+  it('choosing the level that is already loaded keeps its program and resets the map', () => {
+    const levels = start();
+    build(move());
+    step();
+    levels.load('level-1');
+    expect(useProgramStore().blocks.map(block => block.type)).toEqual(['move']);
+    expect(useWorldStore().robot.x).toBe(builtIns[0].map.find(row => row.includes('K'))!.indexOf('K'));
+  });
+
+  it('drops the selection', () => {
+    const levels = start();
+    const first = move();
+    build(first);
+    useUiStore().toggleSelected(first.id);
+    levels.load('level-2');
+    expect(useUiStore().selected).toEqual([]);
   });
 });
 

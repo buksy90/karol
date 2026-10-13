@@ -16,7 +16,12 @@ export function useShortcuts() {
     }
     if (e.key === 'F5' || e.key === 'F6') {
       e.preventDefault();   // F5 must not reload the page
-      if (!open && !editing) { if (e.key === 'F5') exec.toggleRun(); else exec.stepOnce(); }
+      if (!open && !editing) {
+        // a number still being typed is committed (or snaps back) before the run reads the program
+        const focused = document.activeElement;
+        if (focused instanceof HTMLInputElement) focused.blur();
+        if (e.key === 'F5') exec.toggleRun(); else exec.stepOnce();
+      }
     }
   }
 

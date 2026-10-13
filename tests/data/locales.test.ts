@@ -6,6 +6,15 @@ const english: Record<string, string> = en, slovak: Record<string, string> = sk;
 /** The placeholders of a text, e.g. ["{0}", "{1}"]. */
 const placeholders = (text: string): string[] => (text.match(/\{\d+\}/g) || []).sort();
 
+describe('language-support: Texts that are not translated', () => {
+  it('New messages are translated', () => {
+    for (const key of ['ms.editlock', 'ms.dupname', 'ms.toodeep']) {
+      expect(slovak[key]).toBeTruthy();
+      expect(slovak[key]).not.toBe(english[key]);
+    }
+  });
+});
+
 describe('the translations', () => {
   it('Slovak has exactly the keys of English', () => {
     expect(Object.keys(slovak).sort()).toEqual(Object.keys(english).sort());

@@ -1,12 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ProgramNode } from '../../src/logic/types.ts';
-import { useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
+import { CUSTOMS_KEY, useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
 import { useExecutionStore } from '../../src/stores/execution.ts';
-import { useProgramStore } from '../../src/stores/program.ts';
+import { useLevelsStore } from '../../src/stores/levels.ts';
+import { PROGRAMS_KEY, useProgramStore } from '../../src/stores/program.ts';
 import { useSettingsStore } from '../../src/stores/settings.ts';
 import { useUiStore } from '../../src/stores/ui.ts';
 import { call, canGo, move, not, repeat, turn, use, when } from '../helpers/program.ts';
-import { addCustom, loadMap, reloadPage, run, setProgram, setupStores, step, t, teardownStores } from '../helpers/stores.ts';
+import { addCustom, blockStorage, build, inSession, loadMap, newTab, reloadPage, run, setProgram, setupStores, startGame, step, t, teardownStores } from '../helpers/stores.ts';
 
 beforeEach(() => { setupStores(); });
 afterEach(teardownStores);
@@ -36,16 +37,23 @@ describe('custom-blocks: Editor view', () => {
   it('Opening the editor during a run', () => {
     loadMap('WWWWW', 'WK  W', 'WWWWW');
     setProgram(move(), move());
+    const id = addCustom('Corner', turn());
     const execution = useExecutionStore(), customs = useCustomBlocksStore();
     execution.toggleRun();
     customs.openEditor(null);
-    expect([execution.running, execution.active]).toEqual([false, false]);
-    customs.closeEditor();
-    step();
+    expect(customs.draft).toBeNull();
+    expect(execution.running).toBe(true);
     execution.pause();
-    customs.openEditor(null);
-    expect(execution.active).toBe(false);
-    expect(useUiStore().status).toBe(t('ms.editing'));
+    customs.openEditor(id);
+    expect(customs.draft).toBeNull();
+    expect([execution.running, execution.active]).toEqual([false, true]);
+    expect(useUiStore().status).toBe(t('ms.paused'));
+    // also during a stepped run, and for Make block
+    execution.stop();
+    step();
+    customs.openEditor(null, [move()], ['x']);
+    expect(customs.draft).toBeNull();
+    expect(execution.active).toBe(true);
   });
 
   it('ends select mode', () => {
@@ -126,8 +134,18 @@ describe('custom-blocks: Default name', () => {
     expect([customs.blocks[first].name, customs.blocks[second].name]).toEqual(['Block 1', 'Block 2']);
     customs.remove(first);
     const third = addCustom('');
-    expect(customs.blocks[third].name).toBe('Block 2');
+    expect(customs.blocks[third].name).toBe('Block 1');
     expect(customs.blocks[second].name).toBe('Block 2');
+  });
+
+  it('Number already taken by a named block', () => {
+    const customs = useCustomBlocksStore();
+    addCustom('Block 1');
+    const second = addCustom('');
+    expect(customs.blocks[second].name).toBe('Block 2');
+    // however it was typed
+    addCustom(' block 3 ');
+    expect(customs.blocks[addCustom('')].name).toBe('Block 4');
   });
 
   it('is "Blok N" in Slovak', () => {
@@ -136,14 +154,85 @@ describe('custom-blocks: Default name', () => {
     expect(useCustomBlocksStore().blocks[id].name).toBe('Blok 1');
   });
 
-  it('is used for an existing block saved with its name emptied, N being the number of blocks', () => {
+  it('is used for an existing block saved with its name emptied, and may be the name it had', () => {
     const customs = useCustomBlocksStore();
     addCustom('A');
     const id = addCustom('B');
     customs.openEditor(id);
     customs.draft!.name = '';
     customs.save();
-    expect(customs.blocks[id].name).toBe('Block 2');
+    expect(customs.blocks[id].name).toBe('Block 1');
+    customs.openEditor(id);
+    customs.draft!.name = '';
+    customs.save();
+    expect(customs.blocks[id].name).toBe('Block 1');
+    expect(customs.draft).toBeNull();
+  });
+});
+
+describe('custom-blocks: Unique names', () => {
+  it('Duplicate name on a new block', () => {
+    const customs = useCustomBlocksStore();
+    addCustom('Corner', move());
+    customs.openEditor(null);
+    customs.draft!.name = 'corner';
+    customs.draft!.body.push(turn());
+    customs.save();
+    expect(Object.keys(customs.blocks)).toEqual(['c1']);
+    expect(customs.draft).toMatchObject({ id: null, name: 'corner' });
+    expect(types(customs.draft!.body)).toEqual(['rot']);
+    expect(useUiStore().status).toBe('A block named "corner" already exists. Choose another name.');
+    // no id was used up by the refused save
+    customs.draft!.name = 'Bend';
+    customs.save();
+    expect(Object.keys(customs.blocks)).toEqual(['c1', 'c2']);
+  });
+
+  it('Keeping its own name', () => {
+    const customs = useCustomBlocksStore();
+    const id = addCustom('Corner', move());
+    customs.openEditor(id);
+    customs.draft!.body.push(turn());
+    customs.save();
+    expect(customs.draft).toBeNull();
+    expect(customs.blocks[id].name).toBe('Corner');
+    expect(types(customs.blocks[id].body)).toEqual(['move', 'rot']);
+  });
+
+  it('Renaming to a taken name', () => {
+    const customs = useCustomBlocksStore();
+    addCustom('Corner', move());
+    const spin = addCustom('Spin', turn());
+    customs.openEditor(spin);
+    customs.draft!.name = 'Corner';
+    customs.draft!.body.push(move());
+    customs.save();
+    expect(customs.blocks[spin].name).toBe('Spin');
+    expect(types(customs.blocks[spin].body)).toEqual(['rot']);
+    expect(customs.draft).toMatchObject({ id: spin, name: 'Corner' });
+    expect(useUiStore().status).toBe(t('ms.dupname', 'Corner'));
+  });
+
+  it('ignores spaces at the ends and the case of letters, and says so in Slovak too', () => {
+    useSettingsStore().setLanguage('sk');
+    const customs = useCustomBlocksStore();
+    addCustom('Corner');
+    customs.openEditor(null);
+    customs.draft!.name = '  CORNER ';
+    customs.save();
+    expect(Object.keys(customs.blocks)).toEqual(['c1']);
+    expect(useUiStore().status).toBe('Blok s názvom „CORNER“ už existuje. Vyber iný názov.');
+  });
+
+  it('does not replace the selection when the save is refused', () => {
+    const customs = useCustomBlocksStore();
+    addCustom('Corner');
+    const a = move(), b = turn();
+    setProgram(a, b);
+    customs.openEditor(null, [a], [a.id]);
+    customs.draft!.name = 'Corner';
+    customs.save();
+    expect(useProgramStore().blocks.map(node => node.id)).toEqual([a.id, b.id]);
   });
 });
 
@@ -179,6 +268,44 @@ describe('custom-blocks: Deleting', () => {
     expect(program[2].ref).toBe(other);
     expect(types(customs.blocks[other].body)).toEqual(['rot', 'for', 'move']);
     expect(customs.blocks[other].body[1].children).toEqual([]);
+  });
+
+  it('Used on another level', () => {
+    startGame();
+    const levels = useLevelsStore(), customs = useCustomBlocksStore();
+    const corner = addCustom('Corner', move()), other = addCustom('Other', turn());
+    build(move(), call(corner), repeat(2, call(corner), turn()), call(other));
+    levels.load('two');
+    build(call(corner), turn());
+    customs.remove(corner);
+    expect(types(useProgramStore().blocks)).toEqual(['rot']);
+    levels.load('one');
+    const program = useProgramStore().blocks;
+    expect(types(program)).toEqual(['move', 'for', 'call']);
+    expect(types(program[1].children!)).toEqual(['rot']);
+    expect(program[2].ref).toBe(other);
+    // and it stays gone after a reload
+    reloadPage();
+    startGame();
+    expect(types(useProgramStore().blocks)).toEqual(['move', 'for', 'call']);
+    expect(Object.keys(useCustomBlocksStore().blocks)).toEqual([other]);
+  });
+
+  it('Delete during a run', () => {
+    loadMap('WWWWW', 'WK  W', 'WWWWW');
+    const customs = useCustomBlocksStore(), execution = useExecutionStore();
+    const corner = addCustom('Corner', move());
+    setProgram(call(corner), move());
+    execution.toggleRun();
+    execution.pause();
+    customs.remove(corner);
+    expect(Object.keys(customs.blocks)).toEqual([corner]);
+    expect(types(useProgramStore().blocks)).toEqual(['call', 'move']);
+    expect([execution.running, execution.active]).toEqual([false, true]);
+    // possible again once the run has ended
+    execution.stop();
+    customs.remove(corner);
+    expect(customs.blocks).toEqual({});
   });
 
   it('also removes the uses from the block being edited', () => {
@@ -259,6 +386,17 @@ describe('custom-blocks: Make a block from a selection', () => {
     expect(useProgramStore().blocks[1].n).toBe(4);
   });
 
+  it('saves the program in which the selection was replaced', () => {
+    startGame();
+    const a = move(), b = turn();
+    build(a, b);
+    const customs = useCustomBlocksStore();
+    customs.openEditor(null, [a], [a.id]);
+    customs.save();
+    const saved = inSession(PROGRAMS_KEY) as Record<string, { type: string; ref?: string }[]>;
+    expect(saved.one).toMatchObject([{ type: 'call', ref: 'c1' }, { type: 'rot' }]);
+  });
+
   it('clears the dots of the previous run when the selection is replaced', () => {
     loadMap('WWWWW', 'WK  W', 'WWWWW');
     const a = move(), b = move();
@@ -271,13 +409,87 @@ describe('custom-blocks: Make a block from a selection', () => {
   });
 });
 
-describe('custom-blocks: Not persisted', () => {
-  it('Reload', () => {
-    addCustom('A', move());
-    addCustom('B', turn());
+describe('custom-blocks: Custom blocks kept for the session', () => {
+  it('Reload in the same tab', () => {
+    startGame();
+    const corner = addCustom('Corner', move(), turn());
+    addCustom('Twice', repeat(2, call(corner)));
+    build(move(), call(corner));
     reloadPage();
+    startGame();
+    const customs = useCustomBlocksStore();
+    expect(customs.offered).toEqual(['c1', 'c2']);
+    expect([customs.blocks.c1.name, customs.blocks.c2.name]).toEqual(['Corner', 'Twice']);
+    expect(types(customs.blocks.c1.body)).toEqual(['move', 'rot']);
+    expect(customs.blocks.c2.body[0].children![0]).toMatchObject({ type: 'call', ref: 'c1' });
+    // the program of level 1 still uses the custom block
+    expect(useLevelsStore().current).toBe('one');
+    expect(useProgramStore().blocks[1]).toMatchObject({ type: 'call', ref: 'c1' });
+  });
+
+  it('Shared between levels', () => {
+    startGame();
+    const corner = addCustom('Corner', move());
+    useLevelsStore().load('two');
+    expect(useCustomBlocksStore().offered).toEqual([corner]);
+  });
+
+  it('New tab', () => {
+    startGame();
+    addCustom('Corner', move());
+    newTab();
+    startGame();
     const customs = useCustomBlocksStore();
     expect(customs.blocks).toEqual({});
     expect(customs.offered).toEqual([]);
+  });
+
+  it('a block created after a reload gets an id that was never used', () => {
+    startGame();
+    addCustom('A');
+    addCustom('B');
+    useCustomBlocksStore().remove('c2');
+    reloadPage();
+    startGame();
+    expect(addCustom('C')).toBe('c3');
+    expect(Object.keys(useCustomBlocksStore().blocks)).toEqual(['c1', 'c3']);
+  });
+
+  it('saves on create, edit and delete, under karol.customs', () => {
+    const customs = useCustomBlocksStore();
+    const saved = () => inSession(CUSTOMS_KEY) as { blocks: Record<string, { name: string; body: unknown[] }>; counter: number };
+    expect(inSession(CUSTOMS_KEY)).toBeUndefined();
+    const id = addCustom('Corner', move());
+    expect(saved().counter).toBe(1);
+    expect(saved().blocks[id]).toMatchObject({ name: 'Corner', body: [{ type: 'move' }] });
+    customs.openEditor(id);
+    customs.draft!.name = 'Bend';
+    customs.draft!.body.push(turn());
+    expect(saved().blocks[id].name).toBe('Corner');
+    customs.save();
+    expect(saved().blocks[id]).toMatchObject({ name: 'Bend', body: [{ type: 'move' }, { type: 'rot' }] });
+    customs.remove(id);
+    expect(saved()).toEqual({ blocks: {}, counter: 1 });
+  });
+
+  it('are kept until the page is reloaded when storage is blocked', () => {
+    blockStorage();
+    startGame();
+    const corner = addCustom('Corner', move());
+    useLevelsStore().load('two');
+    expect(useCustomBlocksStore().offered).toEqual([corner]);
+    reloadPage();
+    startGame();
+    expect(useCustomBlocksStore().blocks).toEqual({});
+  });
+
+  it('the editor draft is not saved', () => {
+    startGame();
+    const customs = useCustomBlocksStore();
+    customs.openEditor(null, [move()]);
+    reloadPage();
+    startGame();
+    expect(useCustomBlocksStore().draft).toBeNull();
+    expect(useCustomBlocksStore().blocks).toEqual({});
   });
 });

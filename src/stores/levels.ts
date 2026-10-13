@@ -7,6 +7,7 @@ import { useSettingsStore } from './settings.ts';
 import { useUiStore } from './ui.ts';
 import { useWorldStore } from './world.ts';
 import { useExecutionStore } from './execution.ts';
+import { useProgramStore } from './program.ts';
 
 interface LevelsState {
   levels: Level[];
@@ -33,12 +34,16 @@ export const useLevelsStore = defineStore('levels', {
       this.load(storage.get('karol.level'));
       useUiStore().say(useSettingsStore().t('ms.ready'));
     },
-    /** Load a level by id, or the first level when the id is unknown. */
+    /** Load a level by id, or the first level when the id is unknown, together with its own program. */
     load(id: string | null) {
       const level = this.levels.find(l => l.id === id) || this.levels[0];
       this.current = level.id;
       useExecutionStore().end();
       useWorldStore().load(level.map);
+      // every level has its own program
+      useProgramStore().load(level.id);
+      useExecutionStore().clearMarks();
+      useUiStore().clearSelection();
       this.save();
       useUiStore().say(useSettingsStore().t('ms.loaded', level.name));
     },

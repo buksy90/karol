@@ -24,7 +24,7 @@ function stepsOf(program: ProgramNode[], answers: boolean[] = [], customs: Custo
   }
 }
 
-/** A step as short text: "action b1", "cond b2", "loop b3 2", "stuck b4". */
+/** A step as short text: "action b1", "cond b2", "loop b3 2", "stuck b4", "deep b5". */
 const brief = (s: Step): string => s.t + ' ' + s.id + (s.t === 'loop' ? ' ' + s.cnt : '');
 const briefly = (program: ProgramNode[], answers?: boolean[], customs?: CustomBlocks): string[] =>
   stepsOf(program, answers, customs).map(brief);
@@ -82,11 +82,10 @@ describe('runList: Repeat N times', () => {
     expect(stepsOf([repeat(3)])).toHaveLength(4);
   });
 
-  it('treats a number below 1 or an empty field as 1, and above 99 as 99', () => {
-    const rounds = (n: number | '') => stepsOf([repeat(n, move())]).filter(s => s.t === 'action').length;
+  it('treats a number below 1 as 1, and above 99 as 99', () => {
+    const rounds = (n: number) => stepsOf([repeat(n, move())]).filter(s => s.t === 'action').length;
     expect(rounds(0)).toBe(1);
     expect(rounds(-5)).toBe(1);
-    expect(rounds('')).toBe(1);
     expect(rounds(99)).toBe(99);
     expect(rounds(500)).toBe(99);
   });
@@ -192,13 +191,20 @@ describe('runList: nesting depth of custom blocks', () => {
     expect(stepsOf([call('c1')], [], chain(20))).toHaveLength(1);
   });
 
-  it('skips the call that would go deeper, without a step', () => {
-    expect(stepsOf([call('c1')], [], chain(21))).toEqual([]);
+  it('yields a "deep" step for the call that would go deeper, marked on the call block the player sees', () => {
+    const use1 = call('c1');
+    expect(briefly([use1, move()], [], chain(21)).slice(0, 1)).toEqual(['deep ' + use1.id]);
   });
 
-  it('ends a custom block that calls itself', () => {
+  it('reaches the limit in a custom block that calls itself', () => {
     const customs = { c1: { name: 'Again', body: [move(), call('c1')] } };
-    expect(stepsOf([call('c1')], [], customs)).toHaveLength(MAX_DEPTH);
+    const steps = stepsOf([call('c1')], [], customs).map(s => s.t);
+    expect(steps.slice(0, MAX_DEPTH + 1)).toEqual([...Array(MAX_DEPTH).fill('action'), 'deep']);
+  });
+
+  it('still skips a call to a custom block that does not exist, at any depth', () => {
+    expect(stepsOf([call('gone')])).toEqual([]);
+    expect(stepsOf([call('c1')], [], { c1: { name: 'A', body: [call('gone'), move()] } })).toHaveLength(1);
   });
 });
 

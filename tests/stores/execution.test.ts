@@ -411,48 +411,6 @@ describe('program-execution: Clearing marks', () => {
   });
 });
 
-describe('program-execution: Editing during a run', () => {
-  // The drag itself is in the editor; it calls cancelSession when a block is picked up.
-  it('Drag while paused', () => {
-    corridor();
-    const first = move();
-    setProgram(first, move(), move());
-    const execution = useExecutionStore();
-    execution.toggleRun();
-    tick(2);
-    execution.pause();
-    execution.cancelSession();
-    expect([execution.active, execution.current]).toEqual([false, null]);
-    // no message of its own, and the dots stay until the drop
-    expect(status()).toBe(t('ms.paused'));
-    expect(execution.ok[first.id]).toBe(true);
-    execution.toggleRun();
-    expect(robotAt()).toBe('1,1');
-    tick();
-    expect(execution.current).toBe(first.id);
-  });
-
-  it('ends a stepped run the same way', () => {
-    corridor();
-    setProgram(move(), move());
-    step();
-    const execution = useExecutionStore();
-    execution.cancelSession();
-    expect(execution.active).toBe(false);
-    expect(step()).toBe(t('ms.step', 1));
-  });
-
-  it('cancelSession does nothing when no run exists', () => {
-    corridor();
-    const only = move();
-    run(only);
-    const execution = useExecutionStore();
-    execution.cancelSession();
-    expect(execution.ok).toEqual({ [only.id]: true });
-    expect(status()).toBe(t('ms.fin'));
-  });
-});
-
 describe('program-execution: Safety limits', () => {
   it('Endless visible loop', () => {
     corridor();

@@ -7,7 +7,7 @@ import type { BlockDefs, CallDef, ContainerDef, CustomBlocks, Env, ProgramNode, 
 export const STEP_LIMIT = 5000;
 /** Loops may start this many rounds in total before the run ends as "too long". */
 export const LOOP_LIMIT = 200000;
-/** Custom blocks nested deeper than this are skipped. */
+/** Custom blocks run nested this deep; a call that would go deeper ends the run. */
 export const MAX_DEPTH = 20;
 
 /**

@@ -38,7 +38,6 @@
   "ui.reset": "↺ Reset",
   "ui.inv": "Inventory",
   "ui.levels": "🗺️ Levels",
-  "ui.specs": "📖 Specs",
   "ui.options": "⚙️ Options",
   "ui.close": "✕ Close",
   "ui.start": "▶ START",
@@ -74,5 +73,8 @@
   "ms.sel": "{0} selected. Press \"Make block\" to turn them into a custom block.",
   "ms.unsel": "You can only unselect blocks at the ends.",
   "ms.adj": "Select blocks that are next to each other.",
-  "ms.loaded": "Loaded {0}"
+  "ms.loaded": "Loaded {0}",
+  "ms.editlock": "Stop the program first to change it.",
+  "ms.dupname": "A block named \"{0}\" already exists. Choose another name.",
+  "ms.toodeep": "Too many custom blocks inside each other!"
 }

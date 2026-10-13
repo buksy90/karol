@@ -105,6 +105,8 @@ export const useExecutionStore = defineStore('execution', {
         this.setCount(step.id, step.cnt);
       } else if (step.t === 'stuck') {
         ui.say(settings.t('ms.loopstuck')); bad = true; ok = false;
+      } else if (step.t === 'deep') {
+        ui.say(settings.t('ms.toodeep')); bad = true; ok = false;
       } else {
         run.env.counters.actions++;
         const result = step.def.execute({
@@ -149,7 +151,7 @@ export const useExecutionStore = defineStore('execution', {
       useWorldStore().reset();
       useUiStore().say(useSettingsStore().t('ms.reset'));
     },
-    /** End the run, leaving the world as it is. */
+    /** End the run, leaving the world as it is. The only place a run ends, so also where editing unlocks. */
     end(message?: string) {
       this.running = false;
       clearInterval(timer);
@@ -157,13 +159,6 @@ export const useExecutionStore = defineStore('execution', {
       this.active = false;
       this.current = null;
       if (message) useUiStore().say(message);
-    },
-    /** Drop a paused or stepped run without a message, as happens when a block is dragged. */
-    cancelSession() {
-      if (!session) return;
-      session = null;
-      this.active = false;
-      this.current = null;
     },
 
     setSpeed(speed: number) {

@@ -38,7 +38,6 @@
   "ui.reset": "↺ Znova",
   "ui.inv": "Inventár",
   "ui.levels": "🗺️ Úrovne",
-  "ui.specs": "📖 Špecifikácia",
   "ui.options": "⚙️ Možnosti",
   "ui.close": "✕ Zavrieť",
   "ui.start": "▶ ŠTART",
@@ -74,5 +73,8 @@
   "ms.sel": "Vybrané: {0}. Stlač „Vytvoriť blok“ a vznikne z nich vlastný blok.",
   "ms.unsel": "Odznačiť môžeš len bloky na okrajoch výberu.",
   "ms.adj": "Vyber bloky, ktoré sú vedľa seba.",
-  "ms.loaded": "Načítané: {0}"
+  "ms.loaded": "Načítané: {0}",
+  "ms.editlock": "Ak chceš program zmeniť, najprv ho zastav.",
+  "ms.dupname": "Blok s názvom „{0}“ už existuje. Vyber iný názov.",
+  "ms.toodeep": "Príliš veľa vlastných blokov vnorených do seba!"
 }

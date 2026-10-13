@@ -5,6 +5,7 @@ import { defs, isCondition } from '../blocks/index.ts';
 import { useUiStore } from '../stores/ui.ts';
 import { useExecutionStore } from '../stores/execution.ts';
 import { useProgramStore } from '../stores/program.ts';
+import { useSettingsStore } from '../stores/settings.ts';
 import { ensureAudio, playSound } from './useSounds.ts';
 
 /** `ui.drag` while a block is dragged. */
@@ -34,13 +35,15 @@ export interface DragState {
 
 /** Drag and drop of blocks with pointer events (mouse and touch). */
 export function useDragDrop() {
-  const ui = useUiStore(), exec = useExecutionStore(), program = useProgramStore();
+  const ui = useUiStore(), exec = useExecutionStore(), program = useProgramStore(), settings = useSettingsStore();
 
   function onDown(e: PointerEvent) {
     ensureAudio();
     const from = e.target as HTMLElement;
     const el = from.closest<HTMLElement>('.block');
-    if (!el || exec.running || from.tagName === 'INPUT' || from.classList.contains('list')) return;
+    if (!el || from.tagName === 'INPUT' || from.classList.contains('list')) return;
+    // nothing can be edited from the first Run or Step until the run has ended
+    if (exec.active) { ui.say(settings.t('ms.editlock')); return; }
     if (ui.selMode && el.closest('#prog')) {
       if (!el.classList.contains('sensor')) ui.toggleSelected(el.dataset.id!);
       return;
@@ -61,7 +64,6 @@ export function useDragDrop() {
         home = { kind: 'cond', owner: hit.owner.id };
       }
     }
-    exec.cancelSession();   // editing a paused or stepped run ends it
     e.preventDefault();
     try { from.releasePointerCapture(e.pointerId); } catch (_) { /* not captured */ }
     const r = el.getBoundingClientRect();
@@ -109,9 +111,8 @@ export function useDragDrop() {
     const d = ui.drag;
     if (!d) return;
     ui.drag = null;
-    exec.clearMarks();
     ui.clearSelection();
-    if (d.trash) { playSound('del'); return; }
+    if (d.trash) { program.changed(); playSound('del'); return; }
 
     const landed = () => {
       nextTick(() => { ui.landed = d.node.id; });
@@ -127,10 +128,12 @@ export function useDragDrop() {
     if (d.isCond) {
       const owner = d.cond && findNode(program.visibleRoot(), d.cond);
       if (owner) { owner.cond = d.node; landed(); } else goHome();
-      return;
+    } else {
+      const list = d.target && program.listFor(d.target.owner);
+      if (list) { list.splice(Math.min(d.target!.index, list.length), 0, d.node); landed(); } else goHome();
     }
-    const list = d.target && program.listFor(d.target.owner);
-    if (list) { list.splice(Math.min(d.target!.index, list.length), 0, d.node); landed(); } else goHome();
+    // only now is the block back in a list, so only now is the program saved
+    program.changed();
   }
 
   onMounted(() => {

@@ -15,7 +15,7 @@ const ui = useUiStore(), program = useProgramStore(), exec = useExecutionStore()
 const selectedCount = computed(() => ui.selected.length);
 
 function toggleSelectMode() {
-  if (!exec.running) ui.setSelMode(!ui.selMode);
+  if (!exec.active) ui.setSelMode(!ui.selMode);
 }
 
 // Open the editor prefilled with the selected blocks; Save replaces them with the new block.

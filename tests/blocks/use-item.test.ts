@@ -4,7 +4,6 @@ import { KEY } from '../../src/logic/world.ts';
 import { defs } from '../../src/blocks/index.ts';
 import { useExecutionStore } from '../../src/stores/execution.ts';
 import { useInventoryStore } from '../../src/stores/inventory.ts';
-import { useProgramStore } from '../../src/stores/program.ts';
 import { useSettingsStore } from '../../src/stores/settings.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { move, turn, use } from '../helpers/program.ts';
@@ -17,13 +16,6 @@ describe('block-use-item: Slot number', () => {
   it('New block', () => {
     expect(createNode(defs.use).n).toBe(1);
     expect(defs.use.number).toMatchObject({ min: 1, max: 8 });
-  });
-
-  it('Value typed outside the range', () => {
-    loadMap('WWWW', 'WK W', 'WWWW');
-    run(use(12));
-    // running does not correct the number
-    expect(useProgramStore().blocks[0].n).toBe(12);
   });
 });
 
@@ -42,7 +34,7 @@ describe('block-use-item: Unlock a door with a key', () => {
   });
 });
 
-describe('block-use-item: Empty slot', () => {
+describe('block-use-item: Chosen slot is empty', () => {
   it('Empty slot', () => {
     loadMap('WWWW', 'WK W', 'WWWW');
     const failing = use(3), after = turn();
@@ -52,38 +44,6 @@ describe('block-use-item: Empty slot', () => {
     expect(execution.err).toEqual({ [failing.id]: true });
     expect(execution.ok[after.id]).toBe(true);
     expect(said.at(-1)).toBe(t('ms.fin'));
-  });
-
-  it('Slot number out of range', () => {
-    loadMap('WWWW', 'WK W', 'WWWW');
-    const failing = use(12), after = turn();
-    const said = run(failing, after);
-    const execution = useExecutionStore();
-    expect(said).toContain(t('ms.slot', 12));
-    expect(execution.err).toEqual({ [failing.id]: true });
-    expect(execution.ok[after.id]).toBe(true);
-  });
-});
-
-describe('block-use-item: Empty slot', () => {
-  it('Slot number with a fraction', () => {
-    loadMap('WWWWWW', 'WKkL W', 'WWWWWW');
-    const pickUp = move(), failing = use(1.5), after = turn();
-    const said = run(pickUp, failing, after);
-    const execution = useExecutionStore();
-    expect(said).toContain(t('ms.slot', 1.5));
-    expect(useWorldStore().grid[1][3]).toBe('L');
-    expect(useInventoryStore().slots[0]).toBe(KEY);
-    expect(execution.err).toEqual({ [failing.id]: true });
-    expect(execution.ok[after.id]).toBe(true);
-  });
-
-  it('treats an empty number field as no slot', () => {
-    loadMap('WWWWWW', 'WKkL W', 'WWWWWW');
-    const failing = use('');
-    run(move(), failing);
-    expect(useWorldStore().grid[1][3]).toBe('L');
-    expect(useExecutionStore().err).toEqual({ [failing.id]: true });
   });
 });
 

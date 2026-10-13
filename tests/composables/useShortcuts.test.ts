@@ -1,12 +1,14 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { defineComponent } from 'vue';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
+import ProgramPanel from '../../src/components/ProgramPanel.vue';
 import { useShortcuts } from '../../src/composables/useShortcuts.ts';
 import { useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
-import { useExecutionStore } from '../../src/stores/execution.ts';
+import { BASE_INTERVAL, useExecutionStore } from '../../src/stores/execution.ts';
+import { useProgramStore } from '../../src/stores/program.ts';
 import { useUiStore } from '../../src/stores/ui.ts';
 import { mount, unmount } from '../helpers/dom.ts';
-import { move } from '../helpers/program.ts';
+import { move, repeat } from '../helpers/program.ts';
 import { loadMap, robotAt, setProgram, setupStores, t, teardownStores } from '../helpers/stores.ts';
 
 // The composable listens for keys while a component that uses it is on the page, as App.vue does.
@@ -101,6 +103,43 @@ describe('program-execution: Keyboard shortcuts', () => {
     unmount();
     press('F5');
     expect(useExecutionStore().running).toBe(false);
+  });
+});
+
+describe('program-editor: Editing numbers on a block', () => {
+  /** A Repeat 4 times around one Move forward, on a page with the shortcuts on. @returns its number field */
+  function loopOnPage(): HTMLInputElement {
+    unmount();
+    const loop = repeat(4, move());
+    setProgram(loop);
+    const page = mount(defineComponent({ setup() { useShortcuts(); return () => h(ProgramPanel); } }));
+    return page.querySelector<HTMLInputElement>(`.block[data-id="${loop.id}"] input`)!;
+  }
+
+  it('Run started from the keyboard while typing', () => {
+    const input = loopOnPage();
+    input.focus();
+    input.value = '500';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    press('F5');
+    expect(useProgramStore().blocks[0].n).toBe(4);
+    expect(input.value).toBe('4');
+    const execution = useExecutionStore();
+    while (execution.running) vi.advanceTimersByTime(BASE_INTERVAL);
+    // four rounds of one Move forward
+    expect(robotAt()).toBe('5,1');
+  });
+
+  it('a valid number still being typed is used by the run', () => {
+    const input = loopOnPage();
+    input.focus();
+    input.value = '2';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    press('F6');
+    expect(useProgramStore().blocks[0].n).toBe(2);
+    const execution = useExecutionStore();
+    while (execution.active) press('F6');
+    expect(robotAt()).toBe('3,1');
   });
 });
 

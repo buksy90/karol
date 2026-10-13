@@ -7,12 +7,10 @@ import { useExecutionStore } from '../stores/execution.ts';
 const t = useT();
 const ui = useUiStore(), program = useProgramStore(), exec = useExecutionStore();
 
-// Clear empties the program; it does not move the robot. Ignored while running.
+// Clear empties the program; it does not move the robot. Ignored from the first Run or Step until the run has ended.
 function clearProgram() {
-  if (exec.running) return;
-  exec.end();
+  if (exec.active) return;
   program.clear();
-  exec.clearMarks();
   ui.say(t('ms.cleared'));
 }
 </script>

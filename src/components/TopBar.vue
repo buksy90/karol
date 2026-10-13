@@ -12,7 +12,6 @@ const ui = useUiStore();
     <InventoryBar />
     <div id="hudbtns">
       <button id="lvbtn" class="mini" @click="ui.openDialog('lv')">{{ t('ui.levels') }}</button>
-      <button id="spbtn" class="mini" @click="ui.openDialog('sp')">{{ t('ui.specs') }}</button>
       <button id="opbtn" class="mini" @click="ui.openDialog('op')">{{ t('ui.options') }}</button>
     </div>
   </div>

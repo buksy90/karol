@@ -7,13 +7,14 @@ Repeat N times is the container block that runs the blocks inside it a fixed num
 
 - `src/blocks/repeat-times.ts` - the block definition and its loop, including round-start steps
 - `src/stores/execution.ts` - the rounds-left badge state
-- `src/components/BlockItem.vue` - shows the badge
+- `src/components/BlockItem.vue` - the number field; shows the badge
 - `tests/blocks/repeat-times.test.ts` - tests
+- `tests/components/BlockItem.test.ts` - test of the number field
 
 ## Requirements
 
 ### Requirement: Fixed number of rounds
-The Repeat block SHALL run the blocks inside it, in order, N times, where N is the number on the block. A new block SHALL start at 2 and the field SHALL offer the range 1 to 99.
+The Repeat block SHALL run the blocks inside it, in order, N times, where N is the number on the block. A new block SHALL start at 2. The number SHALL always be a whole number from 1 to 99; other values are rejected as described in the `program-editor` capability.
 
 #### Scenario: Three rounds
 - **GIVEN** a Repeat 3 times block containing one Move forward block and free floor ahead
@@ -24,18 +25,10 @@ The Repeat block SHALL run the blocks inside it, in order, N times, where N is t
 - **WHEN** a Repeat block is dragged from the library
 - **THEN** its number is 2 and it contains no blocks
 
-### Requirement: Round count limits at run time
-When the program runs, a number below 1 or an empty field SHALL be treated as 1 and a number above 99 SHALL be treated as 99. The field itself SHALL keep whatever the player typed.
-
-#### Scenario: Zero rounds typed
-- **GIVEN** a Repeat block whose number is 0
-- **WHEN** the program runs
-- **THEN** the blocks inside run once
-
-#### Scenario: Too many rounds typed
-- **GIVEN** a Repeat block whose number is 500
-- **WHEN** the program runs
-- **THEN** the blocks inside run 99 times
+#### Scenario: Value typed outside the range
+- **GIVEN** a Repeat 3 times block
+- **WHEN** the player types 500 into the number and clicks elsewhere
+- **THEN** the block reads Repeat 3 times
 
 ### Requirement: Nesting
 A Repeat block SHALL accept any blocks inside it, including other Repeat, If, Repeat while and custom blocks, to any depth.

@@ -15,8 +15,8 @@ export type Translate = (key: MessageKey, ...args: (string | number)[]) => strin
 export interface ProgramNode {
   id: string;
   type: string;
-  /** A number field holds '' while the player has it cleared. */
-  n?: number | '';
+  /** Always a whole number in the range of the block's definition. */
+  n?: number;
   cond?: ProgramNode | null;
   children?: ProgramNode[];
   ref?: string;
@@ -179,7 +179,9 @@ export type Step =
   /** a Repeat round starting (cnt rounds left; 0 = ended) */
   | { t: 'loop'; id: string; cnt: number }
   /** a Repeat while round that did nothing */
-  | { t: 'stuck'; id: string };
+  | { t: 'stuck'; id: string }
+  /** a custom block call nested too deep */
+  | { t: 'deep'; id: string };
 
 export type StepGenerator = Generator<Step, void, boolean | undefined>;
 

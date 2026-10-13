@@ -10,10 +10,15 @@ Program execution is how the player's blocks become robot behaviour: running the
 - `src/components/RunControls.vue` - Run/Pause, Step, Stop, Reset
 - `src/components/SpeedButtons.vue` - the speed buttons
 - `src/composables/useShortcuts.ts` - F5, F6 and Esc
-- `src/components/BlockItem.vue` - shows the pointer and the status dots
+- `src/components/BlockItem.vue` - shows the pointer and the status dots; number fields disabled during a run
+- `src/composables/useDragDrop.ts` - refuses a drag during a run and shows the hint
+- `src/App.vue` - the locked state of the page during a run
 - `tests/logic/interpreter.test.ts` - tests of the step generator and its limits
 - `tests/stores/execution.test.ts` - tests of run, pause, step, stop, reset, speed, pointer and status dots
 - `tests/composables/useShortcuts.test.ts` - tests of F5, F6 and Esc
+- `tests/composables/useDragDrop.test.ts` - tests of dragging during and after a run
+- `tests/components/ProgramPanel.test.ts` - test of select mode during a run
+- `tests/components/BlockItem.test.ts` - test of the number field during a run
 
 ## Requirements
 
@@ -147,17 +152,37 @@ Status dots and loop badges SHALL be cleared when a new run starts and when the 
 - **THEN** all dots and badges disappear
 
 ### Requirement: Editing during a run
-Blocks SHALL NOT be draggable while the program runs automatically. Starting a drag while the run is paused or being stepped SHALL end the run, so that the next Run or Step starts from the beginning.
+From the first Run or Step until the run has ended, the program SHALL be locked: blocks cannot be dragged from the library or within the program, numbers on blocks cannot be changed, and select mode cannot be switched on. A run ends when the program finishes, fails, wins, or is stopped or reset; pausing does not end it. Trying to drag a block while locked SHALL show "Stop the program first to change it." in the status line.
 
 #### Scenario: Drag while running
 - **GIVEN** a running program
 - **WHEN** the player tries to drag a block
-- **THEN** nothing is picked up
+- **THEN** nothing is picked up and the status line shows "Stop the program first to change it."
 
 #### Scenario: Drag while paused
 - **GIVEN** a paused run
+- **WHEN** the player tries to drag a block
+- **THEN** nothing is picked up and the run is still paused at the same block
+
+#### Scenario: Number field while stepping
+- **GIVEN** a program stepped twice
+- **WHEN** the player clicks the number on a Repeat block
+- **THEN** the number cannot be edited
+
+#### Scenario: Select mode while paused
+- **GIVEN** a paused run
+- **WHEN** the player presses Select
+- **THEN** select mode stays off
+
+#### Scenario: Unlocked after Stop
+- **GIVEN** a paused run
+- **WHEN** the player presses Stop and then drags a block
+- **THEN** the block is picked up
+
+#### Scenario: Unlocked after a failure
+- **GIVEN** a run that ended because the robot walked into a wall
 - **WHEN** the player drags a block
-- **THEN** the run ends and the next Run starts from the first block
+- **THEN** the block is picked up and the status dots of the failed run disappear when it is dropped
 
 ### Requirement: Safety limits
 A run SHALL be ended with "The program runs too long. Is there a loop that never ends?" when it exceeds 5000 steps, or 200000 loop rounds counted across all loops including those inside custom blocks.

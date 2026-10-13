@@ -6,11 +6,10 @@ import type { DialogKind } from '../stores/ui.ts';
 import type { MessageKey } from '../logic/types.ts';
 import LevelsDialog from './LevelsDialog.vue';
 import OptionsDialog from './OptionsDialog.vue';
-import SpecsDialog from './SpecsDialog.vue';
 import WinDialog from './WinDialog.vue';
 
 // The one dialog frame; its content depends on which dialog is open.
-const TITLES: Record<DialogKind, MessageKey> = { lv: 'ui.levels', sp: 'ui.specs', op: 'ui.options', win: 'ui.good' };
+const TITLES: Record<DialogKind, MessageKey> = { lv: 'ui.levels', op: 'ui.options', win: 'ui.good' };
 
 const t = useT();
 const ui = useUiStore();
@@ -23,7 +22,6 @@ const title = computed(() => (ui.dialog ? t(TITLES[ui.dialog]) : ''));
       <div id="mhead"><h2 id="mtitle">{{ title }}</h2><button id="mclose" class="mini" @click="ui.closeDialog()">{{ t('ui.close') }}</button></div>
       <div id="mbody">
         <LevelsDialog v-if="ui.dialog === 'lv'" />
-        <SpecsDialog v-else-if="ui.dialog === 'sp'" />
         <OptionsDialog v-else-if="ui.dialog === 'op'" />
         <WinDialog v-else-if="ui.dialog === 'win'" />
       </div>

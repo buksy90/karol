@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { defs } from '../../src/blocks/index.ts';
 import { useExecutionStore } from '../../src/stores/execution.ts';
+import { useSettingsStore } from '../../src/stores/settings.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { call, move, repeat, turn } from '../helpers/program.ts';
 import { addCustom, loadMap, play, robotAt, run, setProgram, setupStores, step, t, teardownStores } from '../helpers/stores.ts';
@@ -11,11 +12,11 @@ afterEach(teardownStores);
 const corridor = () => loadMap('WWWWWWW', 'WK    W', 'WWWWWWW');
 
 /**
- * Custom blocks each containing the next one; the innermost contains a Move forward.
+ * Custom blocks each containing the next one; the innermost contains a Turn left.
  * @returns the id of the outermost
  */
 function nested(count: number): string {
-  let id = addCustom('Block ' + count, move());
+  let id = addCustom('Block ' + count, turn());
   for (let i = count - 1; i >= 1; i--) id = addCustom('Block ' + i, call(id));
   return id;
 }
@@ -100,19 +101,39 @@ describe('custom-blocks: Executing a custom block', () => {
 describe('custom-blocks: Nesting depth limit', () => {
   it('Call nested too deep', () => {
     corridor();
-    const use1 = call(nested(21));
-    const said = play(use1);
+    const use1 = call(nested(21)), after = move();
+    const said = run(use1, after);
     const execution = useExecutionStore();
-    expect(robotAt()).toBe('1,1');
-    expect(execution.err).toEqual({});
-    expect(said).toEqual([t('ms.fin')]);
+    expect(said.at(-1)).toBe('Too many custom blocks inside each other!');
+    expect(execution.err).toEqual({ [use1.id]: true });
+    expect([execution.running, execution.active]).toEqual([false, false]);
+    expect(execution.ok[after.id]).toBeUndefined();
+    expect(useWorldStore().robot).toEqual({ x: 1, y: 1, d: 1 });
   });
 
-  it('executes 20 levels deep', () => {
+  it('Exactly at the limit', () => {
     corridor();
     const use1 = call(nested(20));
-    play(use1);
-    expect(robotAt()).toBe('2,1');
-    expect(useExecutionStore().ok).toEqual({ [use1.id]: true });
+    const said = play(use1);
+    const execution = useExecutionStore();
+    expect(useWorldStore().robot).toEqual({ x: 1, y: 1, d: 0 });
+    expect(execution.ok).toEqual({ [use1.id]: true });
+    expect(execution.err).toEqual({});
+    expect(said).not.toContain(t('ms.toodeep'));
+  });
+
+  it('marks the block in the program, not one hidden inside, also when the deep call sits in a loop', () => {
+    corridor();
+    const loop = repeat(2, call(nested(21)));
+    play(loop);
+    const execution = useExecutionStore();
+    expect(execution.err).toEqual({ [loop.children![0].id]: true });
+    expect(execution.active).toBe(false);
+  });
+
+  it('says it in Slovak', () => {
+    corridor();
+    useSettingsStore().setLanguage('sk');
+    expect(play(call(nested(21))).at(-1)).toBe('Príliš veľa vlastných blokov vnorených do seba!');
   });
 });

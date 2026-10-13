@@ -1,10 +1,12 @@
-// Store tests: a fresh set of stores per test, storage in memory, time under control.
+// Store tests: a fresh set of stores per test, local and session storage in memory, time under control.
 import { createPinia, setActivePinia } from 'pinia';
 import { vi } from 'vitest';
-import type { BlockDef, MessageKey, ProgramNode } from '../../src/logic/types.ts';
+import type { BlockDef, Level, MessageKey, ProgramNode } from '../../src/logic/types.ts';
 import { defs } from '../../src/blocks/index.ts';
+import { session } from '../../src/logic/storage.ts';
 import { useCustomBlocksStore } from '../../src/stores/customBlocks.ts';
 import { BASE_INTERVAL, useExecutionStore } from '../../src/stores/execution.ts';
+import { useLevelsStore } from '../../src/stores/levels.ts';
 import { useProgramStore } from '../../src/stores/program.ts';
 import { useSettingsStore } from '../../src/stores/settings.ts';
 import { useUiStore } from '../../src/stores/ui.ts';
@@ -21,27 +23,51 @@ export function setupStores(): Map<string, string> {
     getItem: (key: string) => stored.get(key) ?? null,
     setItem: (key: string, value: string) => { stored.set(key, value); },
   });
+  tab = new Map<string, string>();
+  vi.stubGlobal('sessionStorage', {
+    getItem: (key: string) => tab.get(key) ?? null,
+    setItem: (key: string, value: string) => { tab.set(key, value); },
+  });
+  session.forget();
   vi.useFakeTimers();
   return stored;
+}
+
+// What session storage holds: the programs and custom blocks of the browser tab.
+let tab = new Map<string, string>();
+
+/** What session storage holds under a key, parsed. */
+export function inSession(key: string): unknown {
+  const text = tab.get(key);
+  return text === undefined ? undefined : JSON.parse(text);
 }
 
 /** Call in afterEach. The run session and its timer live outside the store, so a new Pinia does not drop them. */
 export function teardownStores(): void {
   useExecutionStore().end();
+  session.forget();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 }
 
-/** A page reload: every store starts again, and only local storage is kept. */
+/** A page reload: every store starts again; local storage and the tab's session storage are kept. */
 export function reloadPage(): void {
   useExecutionStore().end();
+  session.forget();
   setActivePinia(createPinia());
 }
 
-/** Local storage that refuses every call, as in a browser with storage blocked. */
+/** The game opened in a new tab: like a reload, but session storage starts empty. */
+export function newTab(): void {
+  tab.clear();
+  reloadPage();
+}
+
+/** Local and session storage that refuse every call, as in a browser with storage blocked. */
 export function blockStorage(): void {
   const blocked = () => { throw Error('blocked'); };
   vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
+  vi.stubGlobal('sessionStorage', { getItem: blocked, setItem: blocked });
 }
 
 export function loadMap(...rows: string[]): void {
@@ -51,6 +77,28 @@ export function loadMap(...rows: string[]): void {
 export function setProgram(...blocks: ProgramNode[]): void {
   useProgramStore().blocks = blocks;
 }
+
+/** Two small levels for tests that need a level to be loaded: a corridor each, with the exit at its end. */
+export const TWO_LEVELS: Level[] = [
+  { id: 'one', name: 'One', map: ['WWWWWWWW', 'WK    eW', 'WWWWWWWW'] },
+  { id: 'two', name: 'Two', map: ['WWWWWWWW', 'WK    eW', 'WWWWWWWW'] },
+];
+
+/** Start the game the way src/main.ts does: the custom blocks kept for the tab, then the levels. */
+export function startGame(levels: Level[] = TWO_LEVELS): void {
+  useCustomBlocksStore().init();
+  useLevelsStore().init(levels);
+}
+
+/** Build a program the way the editor does: the blocks go in and the change is saved for the current level. */
+export function build(...blocks: ProgramNode[]): void {
+  setProgram(...blocks);
+  useProgramStore().changed();
+}
+
+/** A tree of blocks without its ids, for comparing a program with one that was saved and loaded again. */
+export const shape = (list: ProgramNode[]): unknown =>
+  JSON.parse(JSON.stringify(list, (key, value) => key === 'id' ? undefined : value));
 
 /** Save a custom block the way the editor does. @returns its id */
 export function addCustom(name: string, ...body: ProgramNode[]): string {

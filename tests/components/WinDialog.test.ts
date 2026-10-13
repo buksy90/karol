@@ -10,7 +10,7 @@ import { useUiStore } from '../../src/stores/ui.ts';
 import { useWorldStore } from '../../src/stores/world.ts';
 import { buttonTexts, click, mount, rendered, unmount } from '../helpers/dom.ts';
 import { move, turn } from '../helpers/program.ts';
-import { play, setupStores, t, teardownStores } from '../helpers/stores.ts';
+import { build, play, setupStores, shape, t, teardownStores } from '../helpers/stores.ts';
 
 const builtIns = orderByFileName(import.meta.glob<Level>('../../levels/*.json', { eager: true, import: 'default' }));
 
@@ -32,7 +32,8 @@ async function winOn(levelId: string) {
   const world = useWorldStore(), program = useProgramStore();
   useLevelsStore().load(levelId);
   const start = { ...world.robot };
-  play(turn(), turn());
+  build(turn(), turn());
+  play();
   expect(world.robot).not.toEqual(start);
   useUiStore().openDialog('win');
   await rendered();
@@ -51,6 +52,24 @@ describe('levels: Win dialog', () => {
     expect(useProgramStore().blocks).toEqual([]);
     expect(useUiStore().dialog).toBeNull();
     expect(useExecutionStore().ok).toEqual({});
+  });
+
+  it('Next level, visited before', async () => {
+    const levels = useLevelsStore();
+    levels.load('level-3');
+    const built = [move(), move(), turn(), move()];
+    build(...built);
+    await winOn('level-2');
+    click(body(), t('ui.next'));
+    expect(levels.current).toBe('level-3');
+    expect(shape(useProgramStore().blocks)).toEqual(shape(built));
+  });
+
+  it('The solved level keeps its program', async () => {
+    await winOn('level-2');
+    click(body(), t('ui.next'));
+    useLevelsStore().load('level-2');
+    expect(useProgramStore().blocks.map(block => block.type)).toEqual(['rot', 'rot']);
   });
 
   it('Stay', async () => {
@@ -72,6 +91,18 @@ describe('levels: Win dialog', () => {
     expect(useExecutionStore().ok).toEqual({});
     expect(useUiStore().dialog).toBeNull();
     expect(useUiStore().status).toBe(t('ms.ready'));
+    // and it is still empty when the player later returns to this level
+    useLevelsStore().load('level-3');
+    useLevelsStore().load('level-2');
+    expect(useProgramStore().blocks).toEqual([]);
+  });
+
+  it('Stay keeps the program for a later return too', async () => {
+    await winOn('level-2');
+    click(body(), t('ui.stay'));
+    useLevelsStore().load('level-3');
+    useLevelsStore().load('level-2');
+    expect(useProgramStore().blocks.map(block => block.type)).toEqual(['rot', 'rot']);
   });
 
   it('Last level', async () => {

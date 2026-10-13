@@ -27,8 +27,10 @@ const stores = {
   ui: useUiStore(pinia),
 };
 
-// Start-up order: language and sound, then the levels (which loads the current one).
+// Start-up order: language and sound, then the custom blocks kept for this tab, then the
+// levels (which loads the current one with its program, and that may use custom blocks).
 stores.settings.init();
+stores.customBlocks.init();
 stores.levels.init(orderByFileName(import.meta.glob('../levels/*.json', { eager: true, import: 'default' })));
 
 // Console functions for exchanging levels. Also tried on the parent and top window,

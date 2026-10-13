@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ancestors, cloneList, cloneNode, createNode, findNode, isContiguous, locate, newId, snapshot, stripCalls } from '../../src/logic/program.ts';
+import { ancestors, cloneList, cloneNode, createNode, findNode, isContiguous, locate, newId, parseNumber, restoreList, snapshot, stripCalls } from '../../src/logic/program.ts';
 import { defs } from '../../src/blocks/index.ts';
 import type { ProgramNode } from '../../src/logic/types.ts';
 import { call, canGo, loopWhile, move, not, repeat, turn, use, when } from '../helpers/program.ts';
@@ -197,5 +197,88 @@ describe('isContiguous', () => {
     const indexes = [3, 1, 2];
     isContiguous(indexes);
     expect(indexes).toEqual([3, 1, 2]);
+  });
+});
+
+describe('parseNumber', () => {
+  const slot = { min: 1, max: 8 }, rounds = { min: 1, max: 99 };
+
+  it('keeps a whole number in the range', () => {
+    expect(parseNumber('5', slot)).toBe(5);
+    expect(parseNumber('1', slot)).toBe(1);
+    expect(parseNumber('8', slot)).toBe(8);
+    expect(parseNumber('99', rounds)).toBe(99);
+    expect(parseNumber(' 7 ', rounds)).toBe(7);
+    expect(parseNumber('07', rounds)).toBe(7);
+  });
+
+  it('rejects a number outside the range', () => {
+    expect(parseNumber('12', slot)).toBeNull();
+    expect(parseNumber('9', slot)).toBeNull();
+    expect(parseNumber('0', slot)).toBeNull();
+    expect(parseNumber('0', rounds)).toBeNull();
+    expect(parseNumber('100', rounds)).toBeNull();
+    expect(parseNumber('500', rounds)).toBeNull();
+    expect(parseNumber('-3', rounds)).toBeNull();
+  });
+
+  it('rejects an empty field, a fraction and anything that is not a number', () => {
+    for (const text of ['', '   ', '2.5', '2,5', '2.0', 'abc', '3x', '1e1', '+4', 'NaN', 'Infinity']) {
+      expect(parseNumber(text, rounds)).toBeNull();
+    }
+  });
+});
+describe('restoreList', () => {
+  const customs = { c1: { name: 'Corner', body: [] } };
+  /** What storage hands back: plain data, as written. */
+  const stored = (list: ProgramNode[]): unknown => JSON.parse(JSON.stringify(list));
+  /** A tree without its ids. */
+  const shape = (list: ProgramNode[]): unknown => JSON.parse(JSON.stringify(list, (key, value) => key === 'id' ? undefined : value));
+
+  it('brings back blocks, numbers, nesting and conditions', () => {
+    const program = [move(), repeat(4, when(not(canGo()), turn(), use(3)), loopWhile(canGo(), move())), call('c1')];
+    const restored = restoreList(stored(program), defs, customs);
+    expect(shape(restored)).toEqual(shape(program));
+  });
+
+  it('gives every block a fresh id', () => {
+    const program = [repeat(2, when(not(canGo()), move()))];
+    const before = ids(program);
+    const restored = restoreList(stored(program), defs, customs);
+    const after = ids(restored);
+    expect(after).toHaveLength(before.length);
+    expect(after.filter(id => before.includes(id))).toEqual([]);
+    expect(new Set(after).size).toBe(after.length);
+    // and the next new block does not collide with them
+    expect(after).not.toContain(newId());
+  });
+
+  it('drops calls to custom blocks that do not exist, at any depth', () => {
+    const program = [call('gone'), move(), repeat(2, call('gone'), call('c1'), when(canGo(), call('gone')))];
+    const restored = restoreList(stored(program), defs, customs);
+    expect(shape(restored)).toEqual(shape([move(), repeat(2, call('c1'), when(canGo()))]));
+  });
+
+  it('drops blocks of an unknown type and keeps the rest', () => {
+    const data = [{ id: 'b1', type: 'jump' }, { id: 'b2', type: 'move' }, { id: 'b3', type: 'constructor' }, null, 'move', 7];
+    expect(restoreList(data, defs, customs).map(node => node.type)).toEqual(['move']);
+  });
+
+  it('keeps a sensor only in a condition slot and other blocks only in a list', () => {
+    const data = [
+      { type: 'canfwd' },
+      { type: 'if', cond: { type: 'move' }, children: [{ type: 'not', cond: null }, { type: 'rot' }] },
+    ];
+    const restored = restoreList(data, defs, customs);
+    expect(shape(restored)).toEqual(shape([when(null, turn())]));
+  });
+
+  it('gives a block whose stored number is not valid the number of a new block', () => {
+    const data = [{ type: 'for', n: 500, children: [] }, { type: 'use', n: 2.5 }, { type: 'use' }, { type: 'for', n: 7, children: 'x' }];
+    expect(restoreList(data, defs, customs).map(node => node.n)).toEqual([2, 1, 1, 7]);
+  });
+
+  it('gives an empty list for anything that is not a list', () => {
+    for (const data of [undefined, null, 'text', 5, {}, { type: 'move' }]) expect(restoreList(data, defs, customs)).toEqual([]);
   });
 });

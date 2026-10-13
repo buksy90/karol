@@ -7,21 +7,23 @@ Use item is the action block that applies something from the robot's inventory t
 
 - `src/blocks/use-item.ts` - the block definition, its action and messages
 - `src/logic/world.ts` - using an item on the cell ahead
+- `src/components/BlockItem.vue` - the number field
 - `tests/blocks/use-item.test.ts` - tests
+- `tests/components/BlockItem.test.ts` - test of the number field
 
 ## Requirements
 
 ### Requirement: Slot number
-The Use item block SHALL carry a slot number that the player edits directly on the block. A new block SHALL start at slot 1, and the field SHALL offer the range 1 to 8.
+The Use item block SHALL carry a slot number that the player edits directly on the block. A new block SHALL start at slot 1. The number SHALL always be a whole number from 1 to 8; other values are rejected as described in the `program-editor` capability.
 
 #### Scenario: New block
 - **WHEN** a Use item block is dragged from the library
 - **THEN** its slot number is 1
 
 #### Scenario: Value typed outside the range
-- **GIVEN** a Use item block
-- **WHEN** the player types 12 into the slot number
-- **THEN** the block keeps the value 12
+- **GIVEN** a Use item 2 block
+- **WHEN** the player types 12 into the slot number and clicks elsewhere
+- **THEN** the block reads Use item 2
 
 ### Requirement: Unlock a door with a key
 When the chosen slot holds a key and a locked door is in the cell ahead, the block SHALL open the door, remove the key from the slot and show "Click! The door is open 🔓" in the status line. The robot SHALL NOT move.
@@ -33,26 +35,13 @@ When the chosen slot holds a key and a locked door is in the cell ahead, the blo
 - **AND** the status line shows "Click! The door is open 🔓"
 - **AND** the robot is still on the same cell
 
-### Requirement: Empty slot
-A slot SHALL be named only by a whole number from 1 to 8. When the chosen slot is empty, or the number is outside 1 to 8, has a fraction or is missing, the block SHALL show "Slot N is empty." in the status line and get a red dot, and SHALL NOT use any item. The program SHALL continue with the next block.
+### Requirement: Chosen slot is empty
+When the chosen slot is empty, the block SHALL show "Slot N is empty." in the status line and get a red dot, and SHALL NOT use any item. The program SHALL continue with the next block.
 
 #### Scenario: Empty slot
 - **GIVEN** slot 3 is empty
 - **WHEN** a Use item 3 block executes
 - **THEN** the status line shows "Slot 3 is empty."
-- **AND** the block gets a red dot and the next block executes
-
-#### Scenario: Slot number out of range
-- **GIVEN** a Use item block set to 12
-- **WHEN** it executes
-- **THEN** the status line shows "Slot 12 is empty."
-- **AND** the block gets a red dot and the next block executes
-
-#### Scenario: Slot number with a fraction
-- **GIVEN** a key in slot 1, a locked door ahead and a Use item block set to 1.5
-- **WHEN** it executes
-- **THEN** the status line shows "Slot 1.5 is empty."
-- **AND** the door stays locked and slot 1 still holds the key
 - **AND** the block gets a red dot and the next block executes
 
 ### Requirement: Nothing to use the item on

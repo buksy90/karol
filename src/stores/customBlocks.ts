@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { cloneList, createNode, locate, stripCalls } from '../logic/program.ts';
-import { offeredIds } from '../logic/custom-blocks.ts';
+import { firstFreeName, nameTaken, offeredIds, restoreCustoms } from '../logic/custom-blocks.ts';
+import { session } from '../logic/storage.ts';
 import type { CustomBlocks, ListLocation, ProgramNode } from '../logic/types.ts';
 import { defs } from '../blocks/index.ts';
 import { useSettingsStore } from './settings.ts';
@@ -26,7 +27,10 @@ interface CustomBlocksState {
   draft: Draft | null;
 }
 
-/** Custom blocks, and the one being created or edited. */
+/** Session storage key: the custom blocks and the id counter. */
+export const CUSTOMS_KEY = 'karol.customs';
+
+/** Custom blocks, and the one being created or edited. Shared by all levels, kept for the tab session. */
 export const useCustomBlocksStore = defineStore('customBlocks', {
   state: (): CustomBlocksState => ({
     blocks: {},     // {[id]: {name, body}}
@@ -38,13 +42,22 @@ export const useCustomBlocksStore = defineStore('customBlocks', {
     offered: (state): string[] => offeredIds(state.blocks, state.draft ? state.draft.id : null),
   },
   actions: {
+    /** Restore what an earlier page load in this tab saved. Before the levels start: a program may use these blocks. */
+    init() {
+      const { blocks, counter } = restoreCustoms(session.read(CUSTOMS_KEY), defs);
+      this.blocks = blocks;
+      this.counter = counter;
+    },
+    persist() {
+      session.write(CUSTOMS_KEY, { blocks: this.blocks, counter: this.counter });
+    },
     /**
      * @param id the custom block to edit, or null for a new one
      * @param prefill a list of blocks to start from
      * @param replace the ids of the program blocks that Save swaps for a call to the new block
      */
     openEditor(id: string | null, prefill?: ProgramNode[], replace?: string[]) {
-      useExecutionStore().end();
+      if (useExecutionStore().active) return;   // locked during a run
       const ui = useUiStore();
       ui.setSelMode(false);
       this.draft = {
@@ -59,11 +72,13 @@ export const useCustomBlocksStore = defineStore('customBlocks', {
       this.draft = null;
       useUiStore().say(useSettingsStore().t('ms.ready'));
     },
+    /** Save the block in the editor. Refused, with the editor left open, when another block has its name. */
     save() {
-      const draft = this.draft!, isNew = !draft.id;
+      const draft = this.draft!, settings = useSettingsStore();
+      const name = draft.name.trim() || firstFreeName(this.blocks, settings.t('ui.blockN'), draft.id);
+      if (nameTaken(this.blocks, name, draft.id)) { useUiStore().say(settings.t('ms.dupname', name)); return; }
       const id = draft.id || ('c' + (++this.counter));
-      const fallback = useSettingsStore().t('ui.blockN') + ' ' + (Object.keys(this.blocks).length + (isNew ? 1 : 0));
-      this.blocks[id] = { name: draft.name.trim() || fallback, body: draft.body };
+      this.blocks[id] = { name, body: draft.body };
       if (draft.replace) {
         // selected blocks always sit in a list
         const blocks = useProgramStore().blocks;
@@ -73,16 +88,19 @@ export const useCustomBlocksStore = defineStore('customBlocks', {
           const hit = locate(blocks, old, 'main') as ListLocation | null;
           if (hit) hit.list.splice(hit.index, 1);
         }
-        useExecutionStore().clearMarks();
+        useProgramStore().changed();
       }
+      this.persist();
       this.closeEditor();
     },
-    /** Delete a custom block and every use of it. */
+    /** Delete a custom block and every use of it. Not during a run. */
     remove(id: string) {
+      if (useExecutionStore().active) return;
       delete this.blocks[id];
       for (const key in this.blocks) stripCalls(this.blocks[key].body, id);
-      stripCalls(useProgramStore().blocks, id);
+      useProgramStore().stripCalls(id);
       if (this.draft) stripCalls(this.draft.body, id);
+      this.persist();
     },
   },
 });

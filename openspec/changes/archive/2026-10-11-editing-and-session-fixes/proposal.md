@@ -15,7 +15,6 @@ Writing the baseline specs exposed several places where the game behaves inconsi
 
 Not in this change:
 
-- Translations and levels as external `.json` files. They wait for the change that introduces the bundler.
 - The loop-does-nothing guard (gap 5) and "Step N" overwriting the step's message (gap 11). No decision yet.
 - Stricter level validation (gap 8) and the sonar colour inside Not (gap 10). Deferred by the owner.
 
@@ -31,14 +30,16 @@ None.
 - `program-editor`: the program is kept per level for the tab session; number fields are validated; Clear is blocked for the whole run.
 - `custom-blocks`: kept for the tab session; unique names and a first-free default name; deleting also cleans the programs of other levels; the editor cannot be opened during a run; a call nested too deep is an error.
 - `program-execution`: editing is locked for the whole run, including while paused or stepping.
-- `block-use-item`: the slot number can no longer be outside 1 to 8.
+- `block-use-item`: the slot number can no longer be outside 1 to 8, so what a block does when it runs with an out-of-range, fractional or missing number is no longer a behaviour.
 - `block-repeat-times`: the round count can no longer be outside 1 to 99, so the run-time clamp is no longer a behaviour.
 - `app-shell`: the Specs button and dialog are removed.
 - `language-support`: the in-app specs are no longer an untranslated text; three new messages need both languages.
 
 ## Impact
 
-- `index.html` only: the drag handlers, run controls, custom block editor, level loading, win dialog, number fields, top bar and the translation dictionary.
+- Logic (`src/logic`, `src/blocks`): number parsing, name rules, restoring a stored program, the session storage accessor, a new interpreter step for a call nested too deep.
+- Stores (`src/stores`): the program, custom blocks, levels and execution stores. The `cancelSession` action is removed.
+- Components and composables: drag and drop, shortcuts, the block's number field, the run controls, the program panel, the library, the win dialog, the top bar and the dialog frame. `SpecsDialog.vue` and `specs-en.html` are deleted.
 - New browser storage: session storage entries for the per-level programs and for custom blocks. Local storage use is unchanged.
-- Three new status messages in English and Slovak. The Slovak wording is written by the assistant and needs native review.
-- No automated tests exist yet; verification is manual in a browser.
+- Three new status messages in `locales/en.json` and `locales/sk.json`, and the `ui.specs` text removed from both. The Slovak wording is written by the assistant and needs native review.
+- Tests: the tests that pin the replaced behaviour are rewritten or removed, and new ones are named after the new scenarios. The `## Code` sections of the affected specs and the README follow.
